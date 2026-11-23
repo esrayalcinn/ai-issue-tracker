@@ -1,0 +1,66 @@
+[
+  {
+    "id": "seed-1",
+    "title": "Login button does nothing on Safari mobile",
+    "description": "When tapping 'Sign in' on iOS Safari 17, the network request is never sent and no error appears.",
+    "expected_priority": "high",
+    "expected_labels": ["bug", "frontend", "auth"],
+    "duplicate_group": "safari-login"
+  },
+  {
+    "id": "seed-2",
+    "title": "Can't sign in from iPhone browser",
+    "description": "Tapping the login CTA on my iPhone in Safari gives no feedback at all. Works fine on Chrome desktop.",
+    "expected_priority": "high",
+    "expected_labels": ["bug", "frontend", "auth"],
+    "duplicate_group": "safari-login"
+  },
+  {
+    "id": "seed-3",
+    "title": "Add keyboard shortcut 'c' to open New Issue modal",
+    "description": "Power users should be able to press 'c' anywhere outside an input field to quickly create an issue.",
+    "expected_priority": "low",
+    "expected_labels": ["feature", "ux"],
+    "duplicate_group": null
+  },
+  {
+    "id": "seed-4",
+    "title": "PostgreSQL connection pool exhausted under concurrent requests",
+    "description": "Running 50 parallel GET /issues requests raises QueuePool limit overflow errors after ~10 seconds.",
+    "expected_priority": "urgent",
+    "expected_labels": ["bug", "backend", "database"],
+    "duplicate_group": "db-pool"
+  },
+  {
+    "id": "seed-5",
+    "title": "API returns 500 timeout when many users load the board at once",
+    "description": "Logs show SQLAlchemy QueuePool limit reached and connections timing out during load testing.",
+    "expected_priority": "urgent",
+    "expected_labels": ["bug", "backend", "database"],
+    "duplicate_group": "db-pool"
+  },
+  {
+    "id": "seed-6",
+    "title": "Export filtered issues to CSV",
+    "description": "Allow downloading the currently filtered issue list as a CSV file for weekly progress reports.",
+    "expected_priority": "medium",
+    "expected_labels": ["feature", "frontend"],
+    "duplicate_group": null
+  },
+  {
+    "id": "seed-7",
+    "title": "Dark mode contrast too low on label badges",
+    "description": "Yellow and cyan label pills are hard to read against the dark card background.",
+    "expected_priority": "low",
+    "expected_labels": ["bug", "ui"],
+    "duplicate_group": null
+  },
+  {
+    "id": "seed-8",
+    "title": "Support markdown code blocks in issue descriptions",
+    "description": "Stack traces pasted into descriptions currently lose indentation and are unreadable.",
+    "expected_priority": "medium",
+    "expected_labels": ["feature", "frontend"],
+    "duplicate_group": null
+  }
+]
