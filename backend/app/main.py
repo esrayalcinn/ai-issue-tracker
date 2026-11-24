@@ -3,7 +3,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
 from app.config import settings
-from app.db import engine
+from app.db import Base, engine
+from app.models import issue as _issue_model  # noqa: F401
+from app.routers import issues
+
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="AI-Integrated Issue Tracker API",
@@ -33,6 +37,4 @@ def db_health_check() -> dict[str, str]:
     return {"status": "ok", "database": "connected"}
 
 
-# TODO (Milestone 1): Import and register your issues router here:
-# from app.routers import issues
-# app.include_router(issues.router)
+app.include_router(issues.router)

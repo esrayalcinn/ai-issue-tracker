@@ -21,7 +21,7 @@ IssuePriority = Literal["low", "medium", "high", "urgent"]
 class IssueCreate(BaseModel):
     title: str = Field(min_length=1, max_length=200)
     description: str = Field(min_length=1)
-    llabels: list[str] = Field(default_factory=list)
+    labels: list[str] = Field(default_factory=list)
     priority: IssuePriority | None = None
     status: IssueStatus = Field(default="open")
 
