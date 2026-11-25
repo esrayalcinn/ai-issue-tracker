@@ -20,21 +20,21 @@ interface IssueCardProps {
 const PRIORITIES: (IssuePriority | null)[] = [null, "low", "medium", "high", "urgent"];
 const STATUSES: IssueStatus[] = ["open", "in_progress", "done"];
 
-const LABEL_COLORS = [
-  "bg-indigo-500/15 text-indigo-300 border-indigo-500/30",
-  "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
-  "bg-amber-500/15 text-amber-300 border-amber-500/30",
-  "bg-rose-500/15 text-rose-300 border-rose-500/30",
-  "bg-sky-500/15 text-sky-300 border-sky-500/30",
-  "bg-purple-500/15 text-purple-300 border-purple-500/30",
+const PASTEL_LABELS = [
+  "bg-[#E8F1EC] text-[#3F6B54] border-[#CDE0D5]",
+  "bg-[#FBEBE2] text-[#9E5238] border-[#F0D3C2]",
+  "bg-[#EEEAF8] text-[#5B4D8A] border-[#DCD4F0]",
+  "bg-[#FCF3D9] text-[#8A671F] border-[#EFE0B4]",
+  "bg-[#E5F0F6] text-[#3E6B80] border-[#C9DFEB]",
+  "bg-[#FAE7EB] text-[#9E4555] border-[#EFCFD6]",
 ];
 
-function getLabelColor(label: string): string {
+function getLabelStyle(label: string): string {
   let hash = 0;
   for (let i = 0; i < label.length; i++) {
     hash = label.charCodeAt(i) + ((hash << 5) - hash);
   }
-  return LABEL_COLORS[Math.abs(hash) % LABEL_COLORS.length];
+  return PASTEL_LABELS[Math.abs(hash) % PASTEL_LABELS.length];
 }
 
 export function IssueCard({ issue, onUpdate, onDelete }: IssueCardProps) {
@@ -52,7 +52,7 @@ export function IssueCard({ issue, onUpdate, onDelete }: IssueCardProps) {
       const result = await triageIssue(issue.id);
       setTriageResult(result);
     } catch (err) {
-      setTriageError(err instanceof Error ? err.message : "AI triage failed");
+      setTriageError(err instanceof Error ? err.message : "Could not run triage");
     } finally {
       setTriaging(false);
     }
@@ -71,21 +71,20 @@ export function IssueCard({ issue, onUpdate, onDelete }: IssueCardProps) {
   }
 
   return (
-    <article className="group relative border-b border-zinc-800/80 last:border-b-0 hover:bg-zinc-900/70 transition-colors">
-      <div className="flex items-center gap-3 px-4 py-3">
-        {/* Priority Symbol Popover */}
+    <article className="group relative border-b border-[#ECE5DC] last:border-b-0 transition-colors hover:bg-[#FAF6F0]">
+      <div className="flex items-center gap-3 px-4 py-3.5">
         <div className="relative">
           <button
             type="button"
             title={`Priority: ${PRIORITY_LABEL[issue.priority ?? ""]} (click to change)`}
             onClick={() => setOpenMenu(openMenu === "priority" ? null : "priority")}
-            className="flex h-7 w-7 items-center justify-center rounded-md border border-transparent hover:border-zinc-700 hover:bg-zinc-800 transition"
+            className="flex h-7 w-7 items-center justify-center rounded-lg border border-transparent transition hover:border-[#E5DDD2] hover:bg-[#F3EDE5]"
           >
             <PriorityIcon priority={issue.priority} />
           </button>
 
           {openMenu === "priority" && (
-            <div className="absolute left-0 top-8 z-20 w-36 rounded-lg border border-zinc-700 bg-zinc-900 p-1 shadow-xl">
+            <div className="absolute left-0 top-8 z-20 w-36 rounded-xl border border-[#E5DDD2] bg-[#FFFDF9] p-1.5 shadow-md shadow-[#2B2623]/5">
               {PRIORITIES.map((p) => (
                 <button
                   key={p ?? "none"}
@@ -94,10 +93,10 @@ export function IssueCard({ issue, onUpdate, onDelete }: IssueCardProps) {
                     setOpenMenu(null);
                     onUpdate(issue.id, { priority: p });
                   }}
-                  className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs transition ${
+                  className={`flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-xs transition ${
                     issue.priority === p
-                      ? "bg-zinc-800 text-zinc-100"
-                      : "text-zinc-300 hover:bg-zinc-800/70"
+                      ? "bg-[#F3EDE5] font-medium text-[#2B2623]"
+                      : "text-[#5E554E] hover:bg-[#FAF6F0]"
                   }`}
                 >
                   <PriorityIcon priority={p} className="h-3.5 w-3.5" />
@@ -108,24 +107,22 @@ export function IssueCard({ issue, onUpdate, onDelete }: IssueCardProps) {
           )}
         </div>
 
-        {/* Issue ID */}
-        <span className="w-10 shrink-0 font-mono text-xs text-zinc-500">
-          ISS-{issue.id}
+        <span className="w-12 shrink-0 font-mono text-xs text-[#9C9186]">
+          #{issue.id}
         </span>
 
-        {/* Status Symbol Popover */}
         <div className="relative">
           <button
             type="button"
             title={`Status: ${STATUS_LABEL[issue.status]} (click to change)`}
             onClick={() => setOpenMenu(openMenu === "status" ? null : "status")}
-            className="flex h-7 w-7 items-center justify-center rounded-md border border-transparent hover:border-zinc-700 hover:bg-zinc-800 transition"
+            className="flex h-7 w-7 items-center justify-center rounded-lg border border-transparent transition hover:border-[#E5DDD2] hover:bg-[#F3EDE5]"
           >
             <StatusIcon status={issue.status} />
           </button>
 
           {openMenu === "status" && (
-            <div className="absolute left-0 top-8 z-20 w-36 rounded-lg border border-zinc-700 bg-zinc-900 p-1 shadow-xl">
+            <div className="absolute left-0 top-8 z-20 w-36 rounded-xl border border-[#E5DDD2] bg-[#FFFDF9] p-1.5 shadow-md shadow-[#2B2623]/5">
               {STATUSES.map((s) => (
                 <button
                   key={s}
@@ -134,10 +131,10 @@ export function IssueCard({ issue, onUpdate, onDelete }: IssueCardProps) {
                     setOpenMenu(null);
                     onUpdate(issue.id, { status: s });
                   }}
-                  className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs transition ${
+                  className={`flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-xs transition ${
                     issue.status === s
-                      ? "bg-zinc-800 text-zinc-100"
-                      : "text-zinc-300 hover:bg-zinc-800/70"
+                      ? "bg-[#F3EDE5] font-medium text-[#2B2623]"
+                      : "text-[#5E554E] hover:bg-[#FAF6F0]"
                   }`}
                 >
                   <StatusIcon status={s} className="h-3.5 w-3.5" />
@@ -148,66 +145,54 @@ export function IssueCard({ issue, onUpdate, onDelete }: IssueCardProps) {
           )}
         </div>
 
-        {/* Title (click to expand description) */}
         <button
           type="button"
           onClick={() => setExpanded((prev) => !prev)}
           className="min-w-0 flex-1 text-left"
         >
           <span
-            className={`block truncate text-sm font-medium ${
+            className={`block truncate text-[14px] font-medium ${
               issue.status === "done"
-                ? "text-zinc-500 line-through"
-                : "text-zinc-100 group-hover:text-white"
+                ? "text-[#A3998F] line-through"
+                : "text-[#2B2623]"
             }`}
           >
             {issue.title}
           </span>
         </button>
 
-        {/* Labels */}
         <div className="hidden items-center gap-1.5 sm:flex">
           {issue.labels.slice(0, 3).map((label) => (
             <span
               key={label}
-              className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${getLabelColor(label)}`}
+              className={`rounded-full border px-2.5 py-0.5 text-[11px] font-medium ${getLabelStyle(label)}`}
             >
               {label}
             </span>
           ))}
         </div>
 
-        {/* AI Triage button */}
         <button
           type="button"
-          title="Run Gemini AI triage"
           onClick={handleTriage}
           disabled={triaging}
-          className="flex shrink-0 items-center gap-1 rounded-md border border-indigo-500/30 bg-indigo-500/10 px-2 py-1 text-[11px] font-medium text-indigo-300 transition hover:border-indigo-400/60 hover:bg-indigo-500/20 disabled:opacity-50"
+          className="shrink-0 rounded-lg border border-[#DCD4F0] bg-[#F2EFFA] px-2.5 py-1 text-[11px] font-medium text-[#5B4D8A] transition hover:border-[#C5B8E6] hover:bg-[#E9E3F7] disabled:opacity-50"
         >
-          <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3">
-            <path
-              d="M8 1.75L9.55 6.45L14.25 8L9.55 9.55L8 14.25L6.45 9.55L1.75 8L6.45 6.45L8 1.75Z"
-              fill="currentColor"
-            />
-          </svg>
-          <span>{triaging ? "Triaging..." : "Triage"}</span>
+          {triaging ? "Sorting..." : "Auto-tag"}
         </button>
 
-        {/* Date */}
-        <span className="hidden shrink-0 text-xs text-zinc-500 md:inline">
+        <span className="hidden shrink-0 text-xs text-[#9C9186] md:inline">
           {new Date(issue.created_at).toLocaleDateString(undefined, {
             month: "short",
             day: "numeric",
           })}
         </span>
 
-        {/* Delete button */}
         <button
           type="button"
           title="Delete issue"
           onClick={() => onDelete(issue.id)}
-          className="rounded-md p-1.5 text-zinc-500 opacity-60 transition hover:bg-rose-950/70 hover:text-rose-400 group-hover:opacity-100"
+          className="rounded-lg p-1.5 text-[#A89E94] opacity-70 transition hover:bg-[#FAE7EB] hover:text-[#B04456] group-hover:opacity-100"
         >
           <svg viewBox="0 0 16 16" fill="none" className="h-3.5 w-3.5">
             <path
@@ -221,9 +206,8 @@ export function IssueCard({ issue, onUpdate, onDelete }: IssueCardProps) {
         </button>
       </div>
 
-      {/* Expandable description + AI Triage suggestion drawer */}
       {expanded && (
-        <div className="space-y-3 border-t border-zinc-800/60 bg-zinc-950/50 px-14 py-3 text-sm text-zinc-400">
+        <div className="space-y-3 border-t border-[#F0EAE2] bg-[#F7F2EB]/60 px-14 py-3.5 text-sm text-[#5E554E]">
           <p className="whitespace-pre-wrap leading-relaxed">{issue.description}</p>
 
           {issue.labels.length > 0 && (
@@ -231,7 +215,7 @@ export function IssueCard({ issue, onUpdate, onDelete }: IssueCardProps) {
               {issue.labels.map((label) => (
                 <span
                   key={label}
-                  className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${getLabelColor(label)}`}
+                  className={`rounded-full border px-2.5 py-0.5 text-[11px] font-medium ${getLabelStyle(label)}`}
                 >
                   {label}
                 </span>
@@ -240,47 +224,52 @@ export function IssueCard({ issue, onUpdate, onDelete }: IssueCardProps) {
           )}
 
           {triageError && (
-            <p className="rounded-lg border border-rose-800/70 bg-rose-950/50 px-3 py-2 text-xs text-rose-300">
+            <p className="rounded-xl border border-[#EFCFD6] bg-[#FAE7EB] px-3.5 py-2 text-xs text-[#9E4555]">
               {triageError}
             </p>
           )}
 
           {triageResult && (
-            <div className="rounded-xl border border-indigo-500/40 bg-indigo-950/25 p-3.5 text-xs">
-              <div className="mb-2 flex items-center justify-between gap-2">
-                <span className="font-semibold text-indigo-300">
-                  Gemini Triage Suggestion
+            <div className="rounded-xl border border-[#DCD4F0] bg-[#F5F2FC] p-3.5 text-xs">
+              <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                <span className="font-semibold text-[#4E407A]">
+                  Suggested triage
                 </span>
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
                     onClick={handleApplyTriage}
-                    className="rounded-md bg-indigo-600 px-2.5 py-1 font-medium text-white hover:bg-indigo-500"
+                    className="rounded-lg bg-[#6D5DA1] px-3 py-1 font-medium text-white transition hover:bg-[#5B4D8A]"
                   >
-                    Apply Suggestions
+                    Apply
                   </button>
                   <button
                     type="button"
                     onClick={() => setTriageResult(null)}
-                    className="rounded-md border border-zinc-700 px-2 py-1 text-zinc-400 hover:text-zinc-200"
+                    className="rounded-lg border border-[#DCD4F0] bg-white px-2.5 py-1 text-[#6F648C] hover:bg-[#FAF8FE]"
                   >
                     Dismiss
                   </button>
                 </div>
               </div>
 
-              <p className="text-zinc-200">{triageResult.one_line_summary}</p>
-              <p className="mt-1 text-zinc-400">{triageResult.reasoning}</p>
+              <p className="font-medium text-[#2B2623]">
+                {triageResult.one_line_summary}
+              </p>
+              <p className="mt-1 text-[#6B615A]">{triageResult.reasoning}</p>
 
               <div className="mt-2.5 flex flex-wrap items-center gap-2">
-                <span className="flex items-center gap-1.5 rounded-md border border-zinc-700 bg-zinc-900 px-2 py-0.5 text-zinc-200">
-                  <PriorityIcon priority={triageResult.suggested_priority} className="h-3.5 w-3.5" />
+                <span className="flex items-center gap-1.5 rounded-lg border border-[#E5DDD2] bg-[#FFFDF9] px-2.5 py-0.5 font-medium text-[#2B2623]">
+                  <PriorityIcon
+                    priority={triageResult.suggested_priority}
+                    className="h-3.5 w-3.5"
+                  />
                   {PRIORITY_LABEL[triageResult.suggested_priority]}
                 </span>
                 {triageResult.suggested_labels.map((label) => (
                   <span
                     key={label}
-                    className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${getLabelColor(label)}`}
+                    className={`rounded-full border px-2.5 py-0.5 text-[11px] font-medium ${getLabelStyle(label)}`}
                   >
                     +{label}
                   </span>

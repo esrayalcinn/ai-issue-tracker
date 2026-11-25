@@ -8,17 +8,6 @@ export async function checkBackendHealth(): Promise<{ status: string }> {
   return res.json();
 }
 
-// TODO (Milestone 2 — write these by hand!):
-// Define your TypeScript `Issue` interface and functions for:
-// - listIssues(filters?)
-// - createIssue(payload)
-// - updateIssue(id, payload)
-// - deleteIssue(id)
-//
-// Later milestones:
-// - checkDuplicates(title, description)
-// - triageIssue(id)
-
 export type IssueStatus = "open" | "in_progress" | "done";
 export type IssuePriority = "low" | "medium" | "high" | "urgent";
 

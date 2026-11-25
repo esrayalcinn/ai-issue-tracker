@@ -26,7 +26,6 @@ export function NewIssueForm({ onCreate, onCancel }: NewIssueFormProps) {
   const [duplicates, setDuplicates] = useState<SimilarIssue[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Automatically check for duplicates 600ms after the user pauses typing
   useEffect(() => {
     const trimmedTitle = title.trim();
     const trimmedDesc = description.trim();
@@ -47,7 +46,6 @@ export function NewIssueForm({ onCreate, onCancel }: NewIssueFormProps) {
           setDuplicates(matches);
         }
       } catch {
-        // Don't block issue creation if duplicate check fails
         if (!cancelled) setDuplicates(null);
       } finally {
         if (!cancelled) setCheckingDups(false);
@@ -97,24 +95,26 @@ export function NewIssueForm({ onCreate, onCancel }: NewIssueFormProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/70 p-4 backdrop-blur-xs">
+    <div className="fixed inset-0 z-40 flex items-center justify-center bg-[#2B2623]/30 p-4">
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-lg rounded-2xl border border-zinc-800 bg-zinc-900 p-6 shadow-2xl"
+        className="w-full max-w-lg rounded-2xl border border-[#E5DDD2] bg-[#FFFDF9] p-6 shadow-xl shadow-[#2B2623]/10"
       >
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-base font-semibold text-zinc-100">New Issue</h2>
+          <h2 className="font-display text-lg font-medium text-[#2B2623]">
+            New issue
+          </h2>
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-md px-2 py-1 text-xs text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
+            className="rounded-lg px-2 py-1 text-xs text-[#8C8177] hover:bg-[#F3EDE5] hover:text-[#2B2623]"
           >
-            Esc
+            Close
           </button>
         </div>
 
         {error && (
-          <p className="mb-4 rounded-lg border border-rose-800/80 bg-rose-950/60 px-3 py-2 text-xs text-rose-300">
+          <p className="mb-4 rounded-xl border border-[#EFCFD6] bg-[#FAE7EB] px-3.5 py-2 text-xs text-[#9E4555]">
             {error}
           </p>
         )}
@@ -124,48 +124,48 @@ export function NewIssueForm({ onCreate, onCancel }: NewIssueFormProps) {
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Issue title"
+            placeholder="What needs fixing or building?"
             maxLength={200}
             autoFocus
-            className="w-full bg-transparent text-lg font-medium text-zinc-100 placeholder-zinc-500 focus:outline-none"
+            className="w-full bg-transparent text-base font-semibold text-[#2B2623] placeholder-[#B0A69C] focus:outline-none"
             required
           />
 
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Add description, steps to reproduce, or notes..."
+            placeholder="Write a few notes or steps to reproduce..."
             rows={4}
-            className="w-full resize-none rounded-lg border border-zinc-800 bg-zinc-950/70 p-3 text-sm text-zinc-200 placeholder-zinc-500 focus:border-indigo-500 focus:outline-none"
+            className="w-full resize-none rounded-xl border border-[#E5DDD2] bg-[#FAF7F2] p-3 text-sm text-[#2B2623] placeholder-[#A89E94] focus:border-[#D49A80] focus:bg-[#FFFDF9] focus:outline-none"
             required
           />
 
-          {/* Automatic Duplicate Detection Banner */}
           {checkingDups && (
-            <p className="text-xs text-zinc-500">
-              Checking for similar existing issues...
+            <p className="text-xs text-[#9C9186]">
+              Checking for similar issues...
             </p>
           )}
 
           {!checkingDups && duplicates !== null && duplicates.length > 0 && (
-            <div className="rounded-xl border border-amber-700/60 bg-amber-950/30 p-3">
-              <p className="mb-2 text-xs font-semibold text-amber-300">
-                Warning: This may duplicate an existing issue ({duplicates.length})
+            <div className="rounded-xl border border-[#EFE0B4] bg-[#FCF6E3] p-3">
+              <p className="mb-2 text-xs font-semibold text-[#8A671F]">
+                Heads up — this looks similar to {duplicates.length} existing{" "}
+                {duplicates.length === 1 ? "issue" : "issues"}
               </p>
               <ul className="space-y-1.5">
                 {duplicates.map(({ issue, similarity }) => (
                   <li
                     key={issue.id}
-                    className="flex items-center justify-between gap-2 rounded-lg bg-zinc-950/60 px-2.5 py-1.5 text-xs"
+                    className="flex items-center justify-between gap-2 rounded-lg bg-[#FFFDF9] px-2.5 py-1.5 text-xs border border-[#F0E6C8]"
                   >
-                    <span className="truncate text-zinc-200">
-                      <span className="mr-1.5 font-mono text-zinc-500">
-                        ISS-{issue.id}
+                    <span className="truncate text-[#2B2623]">
+                      <span className="mr-1.5 font-mono text-[#9C9186]">
+                        #{issue.id}
                       </span>
                       {issue.title}
                     </span>
-                    <span className="shrink-0 rounded-full bg-amber-500/20 px-2 py-0.5 font-mono text-[11px] text-amber-300">
-                      {Math.round(similarity * 100)}% match
+                    <span className="shrink-0 rounded-full bg-[#FCF2D9] px-2 py-0.5 font-mono text-[11px] font-medium text-[#8A671F]">
+                      {Math.round(similarity * 100)}%
                     </span>
                   </li>
                 ))}
@@ -173,9 +173,8 @@ export function NewIssueForm({ onCreate, onCancel }: NewIssueFormProps) {
             </div>
           )}
 
-          {/* Priority icon picker */}
           <div>
-            <span className="mb-1.5 block text-xs font-medium text-zinc-400">
+            <span className="mb-1.5 block text-xs font-medium text-[#786F68]">
               Priority
             </span>
             <div className="flex flex-wrap gap-1.5">
@@ -188,8 +187,8 @@ export function NewIssueForm({ onCreate, onCancel }: NewIssueFormProps) {
                     onClick={() => setPriority(p)}
                     className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition ${
                       active
-                        ? "border-indigo-500/70 bg-indigo-500/15 text-zinc-100"
-                        : "border-zinc-800 bg-zinc-950/60 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200"
+                        ? "border-[#D9A791] bg-[#FBEBE2] text-[#7D3E28]"
+                        : "border-[#E5DDD2] bg-[#FAF7F2] text-[#6B615A] hover:bg-[#F3EDE5]"
                     }`}
                   >
                     <PriorityIcon priority={p} className="h-3.5 w-3.5" />
@@ -201,32 +200,32 @@ export function NewIssueForm({ onCreate, onCancel }: NewIssueFormProps) {
           </div>
 
           <div>
-            <span className="mb-1.5 block text-xs font-medium text-zinc-400">
+            <span className="mb-1.5 block text-xs font-medium text-[#786F68]">
               Labels (comma-separated)
             </span>
             <input
               type="text"
               value={labelsInput}
               onChange={(e) => setLabelsInput(e.target.value)}
-              placeholder="bug, frontend, auth"
-              className="w-full rounded-lg border border-zinc-800 bg-zinc-950/70 px-3 py-2 text-sm text-zinc-200 placeholder-zinc-500 focus:border-indigo-500 focus:outline-none"
+              placeholder="bug, frontend, study"
+              className="w-full rounded-xl border border-[#E5DDD2] bg-[#FAF7F2] px-3 py-2 text-sm text-[#2B2623] placeholder-[#A89E94] focus:border-[#D49A80] focus:bg-[#FFFDF9] focus:outline-none"
             />
           </div>
 
-          <div className="flex justify-end gap-2 border-t border-zinc-800 pt-4">
+          <div className="flex justify-end gap-2 border-t border-[#ECE5DC] pt-4">
             <button
               type="button"
               onClick={onCancel}
-              className="rounded-lg border border-zinc-700 px-3.5 py-1.5 text-xs font-medium text-zinc-300 hover:bg-zinc-800"
+              className="rounded-xl border border-[#E5DDD2] px-3.5 py-1.5 text-xs font-medium text-[#6B615A] hover:bg-[#F3EDE5]"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="rounded-lg bg-indigo-600 px-4 py-1.5 text-xs font-medium text-white hover:bg-indigo-500 disabled:opacity-50"
+              className="rounded-xl bg-[#C96B4B] px-4 py-1.5 text-xs font-medium text-white transition hover:bg-[#B55C3E] disabled:opacity-50"
             >
-              {submitting ? "Creating..." : "Create Issue"}
+              {submitting ? "Saving..." : "Save issue"}
             </button>
           </div>
         </div>

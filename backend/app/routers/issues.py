@@ -1,10 +1,3 @@
-"""Issue CRUD and AI action endpoints.
-
-Later milestones:
-- Milestone 3: GET /issues/{id}/duplicates or POST /issues/check-duplicates
-- Milestone 4: POST /issues/{id}/triage
-"""
-
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -56,7 +49,6 @@ def check_duplicates(
         for issue, similarity in matches
     ]
 
-# GET /issues (@router.get("")):
 @router.get("", response_model=list[IssueRead])
 def list_issues(
     status: Optional[IssueStatus] = None,
@@ -66,7 +58,6 @@ def list_issues(
     limit: int = 100,
     db: Session = Depends(get_db),
 ):
-    # Build query with optional filters
     query = select(Issue)
     if status:
         query = query.where(Issue.status == status)
