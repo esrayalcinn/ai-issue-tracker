@@ -21,8 +21,15 @@ from app.schemas.issue import (
     IssueStatus,
     IssueUpdate,
     SimilarIssueRead,
+    TriageResult,
 )
 from app.services.embeddings import embed_issue, find_similar_issues
+from app.services.triage import (
+    TriageConfigError,
+    TriageRateLimitError,
+    TriageServiceError,
+    triage_issue,
+)
 
 router = APIRouter(prefix="/issues", tags=["issues"])
 
@@ -114,3 +121,22 @@ def delete_issue(
     db.delete(issue)
     db.commit()
     return None
+
+
+@router.post("/{issue_id}/triage", response_model=TriageResult)
+def run_issue_triage(
+    issue_id: int,
+    db: Session = Depends(get_db),
+):
+    issue = db.get(Issue, issue_id)
+    if issue is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Issue not found")
+
+    try:
+        return triage_issue(issue.title, issue.description)
+    except TriageConfigError as exc:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc)) from exc
+    except TriageRateLimitError as exc:
+        raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail=str(exc)) from exc
+    except TriageServiceError as exc:
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc

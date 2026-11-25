@@ -1,7 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Issue, IssuePriority, IssueStatus, IssueUpdate } from "@/lib/api";
+import {
+  Issue,
+  IssuePriority,
+  IssueStatus,
+  IssueUpdate,
+  triageIssue,
+  TriageResult,
+} from "@/lib/api";
 import { PRIORITY_LABEL, PriorityIcon, STATUS_LABEL, StatusIcon } from "@/components/Icons";
 
 interface IssueCardProps {
@@ -33,6 +40,35 @@ function getLabelColor(label: string): string {
 export function IssueCard({ issue, onUpdate, onDelete }: IssueCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [openMenu, setOpenMenu] = useState<"priority" | "status" | null>(null);
+  const [triaging, setTriaging] = useState(false);
+  const [triageResult, setTriageResult] = useState<TriageResult | null>(null);
+  const [triageError, setTriageError] = useState<string | null>(null);
+
+  async function handleTriage() {
+    setExpanded(true);
+    setTriaging(true);
+    setTriageError(null);
+    try {
+      const result = await triageIssue(issue.id);
+      setTriageResult(result);
+    } catch (err) {
+      setTriageError(err instanceof Error ? err.message : "AI triage failed");
+    } finally {
+      setTriaging(false);
+    }
+  }
+
+  async function handleApplyTriage() {
+    if (!triageResult) return;
+    const mergedLabels = Array.from(
+      new Set([...issue.labels, ...triageResult.suggested_labels]),
+    );
+    await onUpdate(issue.id, {
+      priority: triageResult.suggested_priority,
+      labels: mergedLabels,
+    });
+    setTriageResult(null);
+  }
 
   return (
     <article className="group relative border-b border-zinc-800/80 last:border-b-0 hover:bg-zinc-900/70 transition-colors">
@@ -141,6 +177,23 @@ export function IssueCard({ issue, onUpdate, onDelete }: IssueCardProps) {
           ))}
         </div>
 
+        {/* AI Triage button */}
+        <button
+          type="button"
+          title="Run Gemini AI triage"
+          onClick={handleTriage}
+          disabled={triaging}
+          className="flex shrink-0 items-center gap-1 rounded-md border border-indigo-500/30 bg-indigo-500/10 px-2 py-1 text-[11px] font-medium text-indigo-300 transition hover:border-indigo-400/60 hover:bg-indigo-500/20 disabled:opacity-50"
+        >
+          <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3">
+            <path
+              d="M8 1.75L9.55 6.45L14.25 8L9.55 9.55L8 14.25L6.45 9.55L1.75 8L6.45 6.45L8 1.75Z"
+              fill="currentColor"
+            />
+          </svg>
+          <span>{triaging ? "Triaging..." : "Triage"}</span>
+        </button>
+
         {/* Date */}
         <span className="hidden shrink-0 text-xs text-zinc-500 md:inline">
           {new Date(issue.created_at).toLocaleDateString(undefined, {
@@ -168,12 +221,13 @@ export function IssueCard({ issue, onUpdate, onDelete }: IssueCardProps) {
         </button>
       </div>
 
-      {/* Expandable description drawer */}
+      {/* Expandable description + AI Triage suggestion drawer */}
       {expanded && (
-        <div className="border-t border-zinc-800/60 bg-zinc-950/50 px-14 py-3 text-sm text-zinc-400">
+        <div className="space-y-3 border-t border-zinc-800/60 bg-zinc-950/50 px-14 py-3 text-sm text-zinc-400">
           <p className="whitespace-pre-wrap leading-relaxed">{issue.description}</p>
+
           {issue.labels.length > 0 && (
-            <div className="mt-2.5 flex flex-wrap gap-1.5 sm:hidden">
+            <div className="flex flex-wrap gap-1.5 sm:hidden">
               {issue.labels.map((label) => (
                 <span
                   key={label}
@@ -182,6 +236,56 @@ export function IssueCard({ issue, onUpdate, onDelete }: IssueCardProps) {
                   {label}
                 </span>
               ))}
+            </div>
+          )}
+
+          {triageError && (
+            <p className="rounded-lg border border-rose-800/70 bg-rose-950/50 px-3 py-2 text-xs text-rose-300">
+              {triageError}
+            </p>
+          )}
+
+          {triageResult && (
+            <div className="rounded-xl border border-indigo-500/40 bg-indigo-950/25 p-3.5 text-xs">
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <span className="font-semibold text-indigo-300">
+                  Gemini Triage Suggestion
+                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleApplyTriage}
+                    className="rounded-md bg-indigo-600 px-2.5 py-1 font-medium text-white hover:bg-indigo-500"
+                  >
+                    Apply Suggestions
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTriageResult(null)}
+                    className="rounded-md border border-zinc-700 px-2 py-1 text-zinc-400 hover:text-zinc-200"
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              </div>
+
+              <p className="text-zinc-200">{triageResult.one_line_summary}</p>
+              <p className="mt-1 text-zinc-400">{triageResult.reasoning}</p>
+
+              <div className="mt-2.5 flex flex-wrap items-center gap-2">
+                <span className="flex items-center gap-1.5 rounded-md border border-zinc-700 bg-zinc-900 px-2 py-0.5 text-zinc-200">
+                  <PriorityIcon priority={triageResult.suggested_priority} className="h-3.5 w-3.5" />
+                  {PRIORITY_LABEL[triageResult.suggested_priority]}
+                </span>
+                {triageResult.suggested_labels.map((label) => (
+                  <span
+                    key={label}
+                    className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${getLabelColor(label)}`}
+                  >
+                    +{label}
+                  </span>
+                ))}
+              </div>
             </div>
           )}
         </div>

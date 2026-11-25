@@ -111,3 +111,27 @@ export async function checkDuplicates(
   if (!res.ok) throw new Error(`Failed to check duplicates (${res.status})`);
   return res.json();
 }
+
+export interface TriageResult {
+  suggested_priority: IssuePriority;
+  suggested_labels: string[];
+  one_line_summary: string;
+  reasoning: string;
+}
+
+export async function triageIssue(id: number): Promise<TriageResult> {
+  const res = await fetch(`${API_URL}/issues/${id}/triage`, {
+    method: "POST",
+  });
+  if (!res.ok) {
+    let detail = `Failed to triage issue (${res.status})`;
+    try {
+      const body = await res.json();
+      if (body?.detail) detail = body.detail;
+    } catch {
+      // ignore non-JSON error body
+    }
+    throw new Error(detail);
+  }
+  return res.json();
+}

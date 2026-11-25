@@ -54,3 +54,10 @@ class DuplicateCheckRequest(BaseModel):
 class SimilarIssueRead(BaseModel):
     issue: IssueRead
     similarity: float
+
+
+class TriageResult(BaseModel):
+    suggested_priority: IssuePriority
+    suggested_labels: list[str] = Field(default_factory=list, max_length=5)
+    one_line_summary: str
+    reasoning: str
