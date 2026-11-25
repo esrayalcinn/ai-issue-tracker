@@ -43,3 +43,14 @@ class IssueRead(BaseModel):
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class DuplicateCheckRequest(BaseModel):
+    title: str = Field(min_length=1, max_length=200)
+    description: str = Field(min_length=1)
+    threshold: float = Field(default=0.45, ge=0.0, le=1.0)
+
+
+class SimilarIssueRead(BaseModel):
+    issue: IssueRead
+    similarity: float

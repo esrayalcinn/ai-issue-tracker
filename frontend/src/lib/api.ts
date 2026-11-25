@@ -93,3 +93,21 @@ export async function deleteIssue(id: number): Promise<void> {
   });
   if (!res.ok) throw new Error(`Failed to delete issue (${res.status})`);
 }
+
+export interface SimilarIssue {
+  issue: Issue;
+  similarity: number;
+}
+
+export async function checkDuplicates(
+  title: string,
+  description: string,
+): Promise<SimilarIssue[]> {
+  const res = await fetch(`${API_URL}/issues/check-duplicates`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ title, description }),
+  });
+  if (!res.ok) throw new Error(`Failed to check duplicates (${res.status})`);
+  return res.json();
+}

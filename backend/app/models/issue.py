@@ -17,6 +17,7 @@ Later (Milestone 3):
   (384 dimensions matches `all-MiniLM-L6-v2`; use 768 if you pick `nomic-embed-text`).
 """
 from datetime import datetime
+from pgvector.sqlalchemy import Vector
 from sqlalchemy import DateTime, String, Text, func
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import Mapped, mapped_column
@@ -38,4 +39,7 @@ class Issue(Base):
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+    embedding: Mapped[list[float] | None] = mapped_column(
+        Vector(384), nullable=True, default=None
     )

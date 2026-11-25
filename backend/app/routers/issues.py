@@ -14,12 +14,15 @@ from sqlalchemy.orm import Session
 from app.db import get_db
 from app.models.issue import Issue
 from app.schemas.issue import (
+    DuplicateCheckRequest,
     IssueCreate,
     IssuePriority,
     IssueRead,
     IssueStatus,
     IssueUpdate,
+    SimilarIssueRead,
 )
+from app.services.embeddings import embed_issue, find_similar_issues
 
 router = APIRouter(prefix="/issues", tags=["issues"])
 
@@ -27,10 +30,24 @@ router = APIRouter(prefix="/issues", tags=["issues"])
 @router.post("", response_model=IssueRead, status_code=status.HTTP_201_CREATED)
 def create_issue(payload: IssueCreate, db: Session = Depends(get_db)):
     issue = Issue(**payload.model_dump())
+    issue.embedding = embed_issue(issue.title, issue.description)
     db.add(issue)
     db.commit()
     db.refresh(issue)
     return issue
+
+
+@router.post("/check-duplicates", response_model=list[SimilarIssueRead])
+def check_duplicates(
+    payload: DuplicateCheckRequest,
+    db: Session = Depends(get_db),
+):
+    query_embedding = embed_issue(payload.title, payload.description)
+    matches = find_similar_issues(db, query_embedding, threshold=payload.threshold)
+    return [
+        SimilarIssueRead(issue=IssueRead.model_validate(issue), similarity=similarity)
+        for issue, similarity in matches
+    ]
 
 # GET /issues (@router.get("")):
 @router.get("", response_model=list[IssueRead])
@@ -76,8 +93,11 @@ def update_issue(
     issue = db.get(Issue, issue_id)
     if issue is None:
         raise HTTPException(status_code=404, detail="Issue not found")
-    for field, value in payload.model_dump(exclude_unset=True).items():
+    updates = payload.model_dump(exclude_unset=True)
+    for field, value in updates.items():
         setattr(issue, field, value)
+    if "title" in updates or "description" in updates:
+        issue.embedding = embed_issue(issue.title, issue.description)
     db.commit()
     db.refresh(issue)
     return issue
