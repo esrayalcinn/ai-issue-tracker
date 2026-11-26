@@ -14,8 +14,9 @@ import {
   updateIssue,
 } from "@/lib/api";
 import { AssistantDrawer } from "@/components/AssistantDrawer";
+import { CatCompanion } from "@/components/CatCompanion";
+import { CatMascot } from "@/components/CatMascot";
 import {
-  CatDoodle,
   PRIORITY_LABEL,
   PriorityIcon,
   STATUS_LABEL,
@@ -42,6 +43,7 @@ export default function HomePage() {
   const [showAssistant, setShowAssistant] = useState(false);
   const [quickTitle, setQuickTitle] = useState("");
   const [quickSaving, setQuickSaving] = useState(false);
+  const [celebrating, setCelebrating] = useState(false);
 
   const [statusFilter, setStatusFilter] = useState<IssueStatus | "">("");
   const [priorityFilter, setPriorityFilter] = useState<IssuePriority | "">("");
@@ -102,6 +104,10 @@ export default function HomePage() {
     try {
       const updated = await updateIssue(id, payload);
       setIssues((prev) => prev.map((item) => (item.id === id ? updated : item)));
+      if (payload.status === "done") {
+        setCelebrating(true);
+        setTimeout(() => setCelebrating(false), 2200);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to update issue");
     }
@@ -117,10 +123,13 @@ export default function HomePage() {
     }
   }
 
+  const openIssues = issues.filter((i) => i.status !== "done");
+  const urgentCount = openIssues.filter((i) => i.priority === "urgent").length;
+
   return (
     <div className="min-h-screen bg-[#FAF7F2] text-[#2B2623]">
-      <div className="mx-auto max-w-4xl px-6 py-10">
-        <header className="mb-8 flex flex-wrap items-end justify-between gap-4 border-b border-[#E8E0D5] pb-6">
+      <div className="mx-auto max-w-4xl px-6 pb-48 pt-10">
+        <header className="mb-8 flex flex-wrap items-end justify-between gap-4 border-b border-[#E8E0D5] pb-5">
           <div>
             <p className="text-xs font-medium uppercase tracking-widest text-[#9C9186]">
               Personal Workspace
@@ -262,8 +271,8 @@ export default function HomePage() {
           </div>
         ) : issues.length === 0 ? (
           <section className="flex flex-col items-center rounded-2xl border border-dashed border-[#DFD5C8] bg-[#FFFDF9]/70 py-14 text-center">
-            <CatDoodle className="mb-3 h-12 w-16" />
-            <p className="font-display text-base font-medium text-[#2B2623]">
+            <CatMascot mood="sleeping" size="lg" />
+            <p className="mt-2 font-display text-base font-medium text-[#2B2623]">
               All clear for now
             </p>
             <p className="mt-1 text-xs text-[#8C8177]">
@@ -283,6 +292,17 @@ export default function HomePage() {
           </section>
         )}
       </div>
+
+      {!showAssistant && (
+        <CatCompanion
+          openCount={openIssues.length}
+          urgentCount={urgentCount}
+          celebrating={celebrating}
+          onNewIssue={() => setShowNewForm(true)}
+          onOpenFullChat={() => setShowAssistant(true)}
+          onBoardMutated={fetchIssues}
+        />
+      )}
 
       {showNewForm && (
         <NewIssueForm

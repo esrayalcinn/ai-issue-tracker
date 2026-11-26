@@ -5,3 +5,33 @@
   --font-display: var(--font-display), ui-serif, Georgia, serif;
   --font-mono: var(--font-mono), ui-monospace, monospace;
 }
+
+@keyframes cat-tail {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(7deg); }
+}
+
+@keyframes cat-purr {
+  0%, 100% { transform: translateY(0) scale(1); }
+  25% { transform: translateY(-2px) scale(1.03); }
+  50% { transform: translateY(0) scale(1); }
+  75% { transform: translateY(-1.5px) scale(1.02); }
+}
+
+@keyframes cat-float {
+  0% { opacity: 0; transform: translateY(4px); }
+  20% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 1; transform: translateY(-2px); }
+}
+
+.animate-cat-tail {
+  animation: cat-tail 3.6s ease-in-out infinite;
+}
+
+.animate-cat-purr {
+  animation: cat-purr 0.65s ease-in-out infinite;
+}
+
+.animate-cat-float {
+  animation: cat-float 0.35s ease-out forwards;
+}
