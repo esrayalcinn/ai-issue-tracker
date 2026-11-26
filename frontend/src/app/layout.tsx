@@ -25,6 +25,17 @@ export const metadata: Metadata = {
   description: "Personal issue tracker",
 };
 
+const THEME_INIT_SCRIPT = `
+(function() {
+  try {
+    var saved = localStorage.getItem('mavis-theme');
+    if (saved === 'dark') {
+      document.documentElement.classList.add('dark');
+    }
+  } catch (e) {}
+})();
+`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -33,11 +44,15 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${dmSans.variable} ${fraunces.variable} ${jetbrainsMono.variable}`}
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
       <body
         suppressHydrationWarning
-        className="min-h-screen bg-[#FAF7F2] font-sans text-[#2B2623] antialiased selection:bg-[#F5D6C6] selection:text-[#2B2623]"
+        className="min-h-screen bg-[var(--bg-page)] font-sans text-[var(--text-main)] antialiased selection:bg-[#F5D6C6] selection:text-[#2B2623] dark:selection:bg-[#5E3A2D] dark:selection:text-[#F2ECE4]"
       >
         {children}
       </body>

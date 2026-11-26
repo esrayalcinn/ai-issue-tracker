@@ -1,9 +1,35 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme inline {
   --font-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-display), ui-serif, Georgia, serif;
   --font-mono: var(--font-mono), ui-monospace, monospace;
+}
+
+:root {
+  --bg-page: #FAF7F2;
+  --bg-surface: #FFFDF9;
+  --bg-subtle: #F3EDE5;
+  --bg-hover: #FAF6F0;
+  --border-main: #E5DDD2;
+  --border-soft: #ECE5DC;
+  --text-main: #2B2623;
+  --text-muted: #6B615A;
+  --text-faint: #9C9186;
+}
+
+html.dark {
+  --bg-page: #1A1715;
+  --bg-surface: #24201D;
+  --bg-subtle: #2F2A26;
+  --bg-hover: #2B2622;
+  --border-main: #3C3530;
+  --border-soft: #322C27;
+  --text-main: #F2ECE4;
+  --text-muted: #B8AEA4;
+  --text-faint: #8C8279;
 }
 
 @keyframes cat-tail {

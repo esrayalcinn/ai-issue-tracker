@@ -59,20 +59,20 @@ export function AssistantDrawer({
   }
 
   return (
-    <aside className="fixed inset-y-0 right-0 z-30 flex w-full max-w-md flex-col border-l border-[#E5DDD2] bg-[#FFFDF9] shadow-xl shadow-[#2B2623]/10">
-      <div className="flex items-center justify-between border-b border-[#ECE5DC] px-5 py-4">
+    <aside className="fixed inset-y-0 right-0 z-30 flex w-full max-w-md flex-col border-l border-[var(--border-main)] bg-[var(--bg-surface)] shadow-xl">
+      <div className="flex items-center justify-between border-b border-[var(--border-soft)] px-5 py-4">
         <div>
-          <h2 className="font-display text-base font-medium text-[#2B2623]">
-            Notebook Assistant
+          <h2 className="font-display text-base font-medium text-[var(--text-main)]">
+            Maviş Assistant
           </h2>
-          <p className="text-[11px] text-[#8C8177]">
-            Reads &amp; updates your real Postgres tasks via tool calling
+          <p className="text-[11px] text-[var(--text-faint)]">
+            Reads &amp; updates your live PostgreSQL tasks
           </p>
         </div>
         <button
           type="button"
           onClick={onClose}
-          className="rounded-lg px-2.5 py-1 text-xs text-[#8C8177] hover:bg-[#F3EDE5] hover:text-[#2B2623]"
+          className="rounded-lg px-2.5 py-1 text-xs text-[var(--text-faint)] hover:bg-[var(--bg-subtle)] hover:text-[var(--text-main)]"
         >
           Close
         </button>
@@ -81,13 +81,13 @@ export function AssistantDrawer({
       <div className="flex-1 space-y-3 overflow-y-auto px-5 py-4">
         {messages.length === 0 && (
           <div className="space-y-2.5 pt-2">
-            <p className="text-xs text-[#786F68]">Try asking:</p>
+            <p className="text-xs text-[var(--text-muted)]">Try asking:</p>
             {STARTER_PROMPTS.map((prompt) => (
               <button
                 key={prompt}
                 type="button"
                 onClick={() => sendMessage(prompt)}
-                className="block w-full rounded-xl border border-[#E5DDD2] bg-[#FAF7F2] px-3.5 py-2.5 text-left text-xs text-[#4A423C] transition hover:border-[#D9A791] hover:bg-[#FBEBE2]/50"
+                className="block w-full rounded-xl border border-[var(--border-main)] bg-[var(--bg-page)] px-3.5 py-2.5 text-left text-xs text-[var(--text-main)] transition hover:border-[#D9A791] hover:bg-[var(--bg-subtle)]"
               >
                 {prompt}
               </button>
@@ -105,8 +105,8 @@ export function AssistantDrawer({
             <div
               className={`max-w-[88%] whitespace-pre-wrap rounded-2xl px-3.5 py-2.5 text-xs leading-relaxed ${
                 msg.role === "user"
-                  ? "bg-[#C96B4B] text-white"
-                  : "border border-[#ECE5DC] bg-[#FAF7F2] text-[#2B2623]"
+                  ? "bg-[#C96B4B] text-white dark:bg-[#D47D60]"
+                  : "border border-[var(--border-soft)] bg-[var(--bg-page)] text-[var(--text-main)]"
               }`}
             >
               {msg.content}
@@ -115,11 +115,13 @@ export function AssistantDrawer({
         ))}
 
         {sending && (
-          <p className="text-xs text-[#9C9186]">Thinking &amp; checking notebook...</p>
+          <p className="text-xs text-[var(--text-faint)]">
+            Maviş is checking your notebook...
+          </p>
         )}
 
         {error && (
-          <p className="rounded-xl border border-[#EFCFD6] bg-[#FAE7EB] px-3.5 py-2 text-xs text-[#9E4555]">
+          <p className="rounded-xl border border-[#EFCFD6] bg-[#FAE7EB] px-3.5 py-2 text-xs text-[#9E4555] dark:border-[#63363F] dark:bg-[#3A2126] dark:text-[#F0A3B0]">
             {error}
           </p>
         )}
@@ -127,7 +129,7 @@ export function AssistantDrawer({
 
       <form
         onSubmit={handleSubmit}
-        className="border-t border-[#ECE5DC] bg-[#FAF7F2] p-3.5"
+        className="border-t border-[var(--border-soft)] bg-[var(--bg-page)] p-3.5"
       >
         <div className="flex items-center gap-2">
           <input
@@ -136,12 +138,12 @@ export function AssistantDrawer({
             onChange={(e) => setInput(e.target.value)}
             placeholder="Ask about tasks or add one..."
             disabled={sending}
-            className="flex-1 rounded-xl border border-[#E5DDD2] bg-[#FFFDF9] px-3 py-2 text-xs text-[#2B2623] placeholder-[#A89E94] focus:border-[#D49A80] focus:outline-none"
+            className="flex-1 rounded-xl border border-[var(--border-main)] bg-[var(--bg-surface)] px-3 py-2 text-xs text-[var(--text-main)] placeholder-[var(--text-faint)] focus:border-[#D49A80] focus:outline-none"
           />
           <button
             type="submit"
             disabled={sending || !input.trim()}
-            className="rounded-xl bg-[#C96B4B] px-3.5 py-2 text-xs font-medium text-white transition hover:bg-[#B55C3E] disabled:opacity-50"
+            className="rounded-xl bg-[#C96B4B] px-3.5 py-2 text-xs font-medium text-white transition hover:bg-[#B55C3E] disabled:opacity-50 dark:bg-[#D47D60] dark:hover:bg-[#C46C4F]"
           >
             Send
           </button>

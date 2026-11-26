@@ -99,26 +99,26 @@ export function NewIssueForm({ onCreate, onCancel }: NewIssueFormProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-[#2B2623]/30 p-4">
+    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/45 p-4">
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-lg rounded-2xl border border-[#E5DDD2] bg-[#FFFDF9] p-6 shadow-xl shadow-[#2B2623]/10"
+        className="w-full max-w-lg rounded-2xl border border-[var(--border-main)] bg-[var(--bg-surface)] p-6 shadow-xl"
       >
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="font-display text-lg font-medium text-[#2B2623]">
+          <h2 className="font-display text-lg font-medium text-[var(--text-main)]">
             New issue
           </h2>
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-lg px-2 py-1 text-xs text-[#8C8177] hover:bg-[#F3EDE5] hover:text-[#2B2623]"
+            className="rounded-lg px-2 py-1 text-xs text-[var(--text-faint)] hover:bg-[var(--bg-subtle)] hover:text-[var(--text-main)]"
           >
             Close
           </button>
         </div>
 
         {error && (
-          <p className="mb-4 rounded-xl border border-[#EFCFD6] bg-[#FAE7EB] px-3.5 py-2 text-xs text-[#9E4555]">
+          <p className="mb-4 rounded-xl border border-[#EFCFD6] bg-[#FAE7EB] px-3.5 py-2 text-xs text-[#9E4555] dark:border-[#63363F] dark:bg-[#3A2126] dark:text-[#F0A3B0]">
             {error}
           </p>
         )}
@@ -131,7 +131,7 @@ export function NewIssueForm({ onCreate, onCancel }: NewIssueFormProps) {
             placeholder="What needs fixing or building?"
             maxLength={200}
             autoFocus
-            className="w-full bg-transparent text-base font-semibold text-[#2B2623] placeholder-[#B0A69C] focus:outline-none"
+            className="w-full bg-transparent text-base font-semibold text-[var(--text-main)] placeholder-[var(--text-faint)] focus:outline-none"
             required
           />
 
@@ -140,18 +140,18 @@ export function NewIssueForm({ onCreate, onCancel }: NewIssueFormProps) {
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Optional notes or steps to reproduce..."
             rows={4}
-            className="w-full resize-none rounded-xl border border-[#E5DDD2] bg-[#FAF7F2] p-3 text-sm text-[#2B2623] placeholder-[#A89E94] focus:border-[#D49A80] focus:bg-[#FFFDF9] focus:outline-none"
+            className="w-full resize-none rounded-xl border border-[var(--border-main)] bg-[var(--bg-page)] p-3 text-sm text-[var(--text-main)] placeholder-[var(--text-faint)] focus:border-[#D49A80] focus:bg-[var(--bg-surface)] focus:outline-none"
           />
 
           {checkingDups && (
-            <p className="text-xs text-[#9C9186]">
+            <p className="text-xs text-[var(--text-faint)]">
               Checking for similar issues...
             </p>
           )}
 
           {!checkingDups && duplicates !== null && duplicates.length > 0 && (
-            <div className="rounded-xl border border-[#EFE0B4] bg-[#FCF6E3] p-3">
-              <p className="mb-2 text-xs font-semibold text-[#8A671F]">
+            <div className="rounded-xl border border-[#EFE0B4] bg-[#FCF6E3] p-3 dark:border-[#5C4B24] dark:bg-[#382F1B]">
+              <p className="mb-2 text-xs font-semibold text-[#8A671F] dark:text-[#E8C97A]">
                 Heads up — this looks similar to {duplicates.length} existing{" "}
                 {duplicates.length === 1 ? "issue" : "issues"}
               </p>
@@ -159,15 +159,15 @@ export function NewIssueForm({ onCreate, onCancel }: NewIssueFormProps) {
                 {duplicates.map(({ issue, similarity }) => (
                   <li
                     key={issue.id}
-                    className="flex items-center justify-between gap-2 rounded-lg bg-[#FFFDF9] px-2.5 py-1.5 text-xs border border-[#F0E6C8]"
+                    className="flex items-center justify-between gap-2 rounded-lg border border-[var(--border-soft)] bg-[var(--bg-surface)] px-2.5 py-1.5 text-xs"
                   >
-                    <span className="truncate text-[#2B2623]">
-                      <span className="mr-1.5 font-mono text-[#9C9186]">
+                    <span className="truncate text-[var(--text-main)]">
+                      <span className="mr-1.5 font-mono text-[var(--text-faint)]">
                         #{issue.id}
                       </span>
                       {issue.title}
                     </span>
-                    <span className="shrink-0 rounded-full bg-[#FCF2D9] px-2 py-0.5 font-mono text-[11px] font-medium text-[#8A671F]">
+                    <span className="shrink-0 rounded-full bg-[#FCF2D9] px-2 py-0.5 font-mono text-[11px] font-medium text-[#8A671F] dark:bg-[#4A3D21] dark:text-[#E8C97A]">
                       {Math.round(similarity * 100)}%
                     </span>
                   </li>
@@ -177,7 +177,7 @@ export function NewIssueForm({ onCreate, onCancel }: NewIssueFormProps) {
           )}
 
           <div>
-            <span className="mb-1.5 block text-xs font-medium text-[#786F68]">
+            <span className="mb-1.5 block text-xs font-medium text-[var(--text-muted)]">
               Priority
             </span>
             <div className="flex flex-wrap gap-1.5">
@@ -190,8 +190,8 @@ export function NewIssueForm({ onCreate, onCancel }: NewIssueFormProps) {
                     onClick={() => setPriority(p)}
                     className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition ${
                       active
-                        ? "border-[#D9A791] bg-[#FBEBE2] text-[#7D3E28]"
-                        : "border-[#E5DDD2] bg-[#FAF7F2] text-[#6B615A] hover:bg-[#F3EDE5]"
+                        ? "border-[#D9A791] bg-[#FBEBE2] text-[#7D3E28] dark:border-[#8C523D] dark:bg-[#3B261E] dark:text-[#F0B69E]"
+                        : "border-[var(--border-main)] bg-[var(--bg-page)] text-[var(--text-muted)] hover:bg-[var(--bg-subtle)]"
                     }`}
                   >
                     <PriorityIcon priority={p} className="h-3.5 w-3.5" />
@@ -204,19 +204,19 @@ export function NewIssueForm({ onCreate, onCancel }: NewIssueFormProps) {
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
-              <span className="mb-1.5 block text-xs font-medium text-[#786F68]">
+              <span className="mb-1.5 block text-xs font-medium text-[var(--text-muted)]">
                 Due date &amp; time (optional)
               </span>
               <input
                 type="datetime-local"
                 value={dueInput}
                 onChange={(e) => setDueInput(e.target.value)}
-                className="w-full rounded-xl border border-[#E5DDD2] bg-[#FAF7F2] px-3 py-2 text-xs text-[#2B2623] focus:border-[#D49A80] focus:bg-[#FFFDF9] focus:outline-none"
+                className="w-full rounded-xl border border-[var(--border-main)] bg-[var(--bg-page)] px-3 py-2 text-xs text-[var(--text-main)] focus:border-[#D49A80] focus:bg-[var(--bg-surface)] focus:outline-none"
               />
             </div>
 
             <div>
-              <span className="mb-1.5 block text-xs font-medium text-[#786F68]">
+              <span className="mb-1.5 block text-xs font-medium text-[var(--text-muted)]">
                 Labels (comma-separated)
               </span>
               <input
@@ -224,23 +224,23 @@ export function NewIssueForm({ onCreate, onCancel }: NewIssueFormProps) {
                 value={labelsInput}
                 onChange={(e) => setLabelsInput(e.target.value)}
                 placeholder="bug, frontend, study"
-                className="w-full rounded-xl border border-[#E5DDD2] bg-[#FAF7F2] px-3 py-2 text-xs text-[#2B2623] placeholder-[#A89E94] focus:border-[#D49A80] focus:bg-[#FFFDF9] focus:outline-none"
+                className="w-full rounded-xl border border-[var(--border-main)] bg-[var(--bg-page)] px-3 py-2 text-xs text-[var(--text-main)] placeholder-[var(--text-faint)] focus:border-[#D49A80] focus:bg-[var(--bg-surface)] focus:outline-none"
               />
             </div>
           </div>
 
-          <div className="flex justify-end gap-2 border-t border-[#ECE5DC] pt-4">
+          <div className="flex justify-end gap-2 border-t border-[var(--border-soft)] pt-4">
             <button
               type="button"
               onClick={onCancel}
-              className="rounded-xl border border-[#E5DDD2] px-3.5 py-1.5 text-xs font-medium text-[#6B615A] hover:bg-[#F3EDE5]"
+              className="rounded-xl border border-[var(--border-main)] px-3.5 py-1.5 text-xs font-medium text-[var(--text-muted)] hover:bg-[var(--bg-subtle)]"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="rounded-xl bg-[#C96B4B] px-4 py-1.5 text-xs font-medium text-white transition hover:bg-[#B55C3E] disabled:opacity-50"
+              className="rounded-xl bg-[#C96B4B] px-4 py-1.5 text-xs font-medium text-white transition hover:bg-[#B55C3E] disabled:opacity-50 dark:bg-[#D47D60] dark:hover:bg-[#C46C4F]"
             >
               {submitting ? "Saving..." : "Save issue"}
             </button>

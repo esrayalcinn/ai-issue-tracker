@@ -37,7 +37,6 @@ export function CatCompanion({
   const [input, setInput] = useState("");
   const [nowMs, setNowMs] = useState(() => Date.now());
 
-  // Refresh deadline countdowns every 60 seconds
   useEffect(() => {
     const id = setInterval(() => setNowMs(Date.now()), 60_000);
     return () => clearInterval(id);
@@ -48,7 +47,6 @@ export function CatCompanion({
   const reminders = getUpcomingReminders(openIssues, nowMs);
   const topReminder = reminders[0] ?? null;
 
-  // Maviş automatically wakes up if a deadline is overdue or <= 1 hour away!
   const hasImmediateDeadline =
     topReminder !== null &&
     (topReminder.info.urgency === "overdue" || topReminder.info.urgency === "hour");
@@ -123,21 +121,25 @@ export function CatCompanion({
 
   let hintPill: string | null = null;
   let hintPillClass =
-    "border-[#E5DDD2] bg-[#FFFDF9] text-[#6B615A] hover:border-[#D9A791]";
+    "border-[var(--border-main)] bg-[var(--bg-surface)] text-[var(--text-muted)] hover:border-[#D9A791]";
 
   if (celebrating) {
     hintPill = "Nice job!";
-    hintPillClass = "border-[#CDE0D5] bg-[#E8F1EC] text-[#3B664F]";
+    hintPillClass =
+      "border-[#CDE0D5] bg-[#E8F1EC] text-[#3B664F] dark:border-[#304D3E] dark:bg-[#1F3128] dark:text-[#98CFB2]";
   } else if (!bubbleOpen) {
     if (hasImmediateDeadline && topReminder) {
       hintPill = `Maviş: "${shortTitle}" ${topReminder.info.label}!`;
-      hintPillClass = "border-[#EFCFD6] bg-[#FAE7EB] text-[#9E4555]";
+      hintPillClass =
+        "border-[#EFCFD6] bg-[#FAE7EB] text-[#9E4555] dark:border-[#63363F] dark:bg-[#3A2126] dark:text-[#F0A3B0]";
     } else if (topReminder && topReminder.info.urgency === "soon") {
       hintPill = `zzZ · "${shortTitle}" ${topReminder.info.label}`;
-      hintPillClass = "border-[#EFE0B4] bg-[#FCF3D9] text-[#8A671F]";
+      hintPillClass =
+        "border-[#EFE0B4] bg-[#FCF3D9] text-[#8A671F] dark:border-[#5C4B24] dark:bg-[#382F1B] dark:text-[#E8C97A]";
     } else if (topReminder && topReminder.info.urgency === "week") {
       hintPill = `zzZ · due ${topReminder.info.label}`;
-      hintPillClass = "border-[#C9DFEB] bg-[#E5F0F6] text-[#3E6B80]";
+      hintPillClass =
+        "border-[#C9DFEB] bg-[#E5F0F6] text-[#3E6B80] dark:border-[#2F4A59] dark:bg-[#1E2E37] dark:text-[#96C7DE]";
     } else if (urgentCount > 0) {
       hintPill = `zzZ · ${urgentCount} urgent`;
     } else {
@@ -149,21 +151,21 @@ export function CatCompanion({
     <div
       className={`${
         inline ? "relative mb-2 w-full" : "mb-2 w-80 sm:w-88"
-      } animate-cat-float rounded-2xl border border-[#E2D8CB] bg-[#FFFDF9] p-4 shadow-lg shadow-[#2B2623]/10`}
+      } animate-cat-float rounded-2xl border border-[var(--border-main)] bg-[var(--bg-surface)] p-4 shadow-lg`}
     >
       <div className="mb-2.5 flex items-start justify-between gap-2">
         <div>
-          <span className="mb-0.5 block font-display text-xs font-semibold text-[#8C6D53]">
+          <span className="mb-0.5 block font-display text-xs font-semibold text-[#A07A5B] dark:text-[#D8B292]">
             Maviş
           </span>
-          <p className="whitespace-pre-wrap text-xs leading-relaxed text-[#2B2623]">
+          <p className="whitespace-pre-wrap text-xs leading-relaxed text-[var(--text-main)]">
             {thinking ? "Maviş is checking your notebook..." : (reply ?? defaultGreeting)}
           </p>
         </div>
         <button
           type="button"
           onClick={() => setBubbleOpen(false)}
-          className="shrink-0 rounded-md px-1.5 py-0.5 text-[11px] text-[#9C9186] hover:bg-[#F3EDE5] hover:text-[#2B2623]"
+          className="shrink-0 rounded-md px-1.5 py-0.5 text-[11px] text-[var(--text-faint)] hover:bg-[var(--bg-subtle)] hover:text-[var(--text-main)]"
         >
           ×
         </button>
@@ -176,7 +178,7 @@ export function CatCompanion({
             setBubbleOpen(false);
             onNewIssue();
           }}
-          className="rounded-xl border border-[#F0D3C2] bg-[#FBEBE2] px-2.5 py-1.5 text-[11px] font-medium text-[#8C452D] transition hover:bg-[#F7DFD1]"
+          className="rounded-xl border border-[#F0D3C2] bg-[#FBEBE2] px-2.5 py-1.5 text-[11px] font-medium text-[#8C452D] transition hover:bg-[#F7DFD1] dark:border-[#593A2E] dark:bg-[#38251E] dark:text-[#EBB098] dark:hover:bg-[#472F26]"
         >
           + New task
         </button>
@@ -185,7 +187,7 @@ export function CatCompanion({
           type="button"
           disabled={thinking}
           onClick={() => askCat("What deadlines or urgent items do I have coming up?")}
-          className="rounded-xl border border-[#EFCFD6] bg-[#FAE7EB] px-2.5 py-1.5 text-[11px] font-medium text-[#963F50] transition hover:bg-[#F5D8DF] disabled:opacity-50"
+          className="rounded-xl border border-[#EFCFD6] bg-[#FAE7EB] px-2.5 py-1.5 text-[11px] font-medium text-[#963F50] transition hover:bg-[#F5D8DF] disabled:opacity-50 dark:border-[#63363F] dark:bg-[#3A2126] dark:text-[#F0A3B0] dark:hover:bg-[#4A2A31]"
         >
           Deadlines?
         </button>
@@ -194,7 +196,7 @@ export function CatCompanion({
           type="button"
           disabled={thinking}
           onClick={() => askCat("Give me a short friendly summary of my open tasks.")}
-          className="rounded-xl border border-[#DCD4F0] bg-[#F2EFFA] px-2.5 py-1.5 text-[11px] font-medium text-[#554782] transition hover:bg-[#E7E0F7] disabled:opacity-50"
+          className="rounded-xl border border-[#DCD4F0] bg-[#F2EFFA] px-2.5 py-1.5 text-[11px] font-medium text-[#554782] transition hover:bg-[#E7E0F7] disabled:opacity-50 dark:border-[#494066] dark:bg-[#2A253B] dark:text-[#CFC5F0] dark:hover:bg-[#352E4A]"
         >
           Summarize
         </button>
@@ -202,7 +204,7 @@ export function CatCompanion({
         <button
           type="button"
           onClick={handlePet}
-          className="rounded-xl border border-[#CDE0D5] bg-[#E8F1EC] px-2.5 py-1.5 text-[11px] font-medium text-[#3B664F] transition hover:bg-[#DAE9E0]"
+          className="rounded-xl border border-[#CDE0D5] bg-[#E8F1EC] px-2.5 py-1.5 text-[11px] font-medium text-[#3B664F] transition hover:bg-[#DAE9E0] dark:border-[#304D3E] dark:bg-[#1F3128] dark:text-[#98CFB2] dark:hover:bg-[#294034]"
         >
           Pet Maviş
         </button>
@@ -214,7 +216,7 @@ export function CatCompanion({
               setBubbleOpen(false);
               onOpenFullChat();
             }}
-            className="rounded-xl border border-[#E5DDD2] bg-[#FAF7F2] px-2.5 py-1.5 text-[11px] font-medium text-[#6B615A] transition hover:bg-[#F0E9DF]"
+            className="rounded-xl border border-[var(--border-main)] bg-[var(--bg-page)] px-2.5 py-1.5 text-[11px] font-medium text-[var(--text-muted)] transition hover:bg-[var(--bg-subtle)]"
           >
             Full chat
           </button>
@@ -228,19 +230,19 @@ export function CatCompanion({
           onChange={(e) => setInput(e.target.value)}
           placeholder="Tell Maviş: 'add OS hw due Friday'..."
           disabled={thinking}
-          className="flex-1 rounded-xl border border-[#E5DDD2] bg-[#FAF7F2] px-2.5 py-1.5 text-xs text-[#2B2623] placeholder-[#A89E94] focus:border-[#D49A80] focus:bg-[#FFFDF9] focus:outline-none"
+          className="flex-1 rounded-xl border border-[var(--border-main)] bg-[var(--bg-page)] px-2.5 py-1.5 text-xs text-[var(--text-main)] placeholder-[var(--text-faint)] focus:border-[#D49A80] focus:bg-[var(--bg-surface)] focus:outline-none"
         />
         <button
           type="submit"
           disabled={thinking || !input.trim()}
-          className="rounded-xl bg-[#C96B4B] px-3 py-1.5 text-[11px] font-medium text-white transition hover:bg-[#B55C3E] disabled:opacity-40"
+          className="rounded-xl bg-[#C96B4B] px-3 py-1.5 text-[11px] font-medium text-white transition hover:bg-[#B55C3E] disabled:opacity-40 dark:bg-[#D47D60] dark:hover:bg-[#C46C4F]"
         >
           Go
         </button>
       </form>
 
       <div
-        className={`absolute -bottom-2 h-4 w-4 rotate-45 border-b border-r border-[#E2D8CB] bg-[#FFFDF9] ${
+        className={`absolute -bottom-2 h-4 w-4 rotate-45 border-b border-r border-[var(--border-main)] bg-[var(--bg-surface)] ${
           inline ? "left-1/2 -translate-x-1/2" : "right-16"
         }`}
       />

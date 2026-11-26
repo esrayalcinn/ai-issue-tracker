@@ -34,7 +34,8 @@ export function getDeadlineInfo(
     return {
       urgency: "overdue",
       label,
-      badgeClass: "border-[#EFCFD6] bg-[#FAE7EB] text-[#9E4555]",
+      badgeClass:
+        "border-[#EFCFD6] bg-[#FAE7EB] text-[#9E4555] dark:border-[#63363F] dark:bg-[#3A2126] dark:text-[#F0A3B0]",
       diffMs,
     };
   }
@@ -44,7 +45,8 @@ export function getDeadlineInfo(
     return {
       urgency: "hour",
       label: `in ${mins} min`,
-      badgeClass: "border-[#EFCFD6] bg-[#FAE7EB] text-[#9E4555]",
+      badgeClass:
+        "border-[#EFCFD6] bg-[#FAE7EB] text-[#9E4555] dark:border-[#63363F] dark:bg-[#3A2126] dark:text-[#F0A3B0]",
       diffMs,
     };
   }
@@ -56,7 +58,8 @@ export function getDeadlineInfo(
     return {
       urgency: "soon",
       label,
-      badgeClass: "border-[#EFE0B4] bg-[#FCF3D9] text-[#8A671F]",
+      badgeClass:
+        "border-[#EFE0B4] bg-[#FCF3D9] text-[#8A671F] dark:border-[#5C4B24] dark:bg-[#382F1B] dark:text-[#E8C97A]",
       diffMs,
     };
   }
@@ -66,7 +69,8 @@ export function getDeadlineInfo(
     return {
       urgency: "week",
       label: `in ${days}d`,
-      badgeClass: "border-[#C9DFEB] bg-[#E5F0F6] text-[#3E6B80]",
+      badgeClass:
+        "border-[#C9DFEB] bg-[#E5F0F6] text-[#3E6B80] dark:border-[#2F4A59] dark:bg-[#1E2E37] dark:text-[#96C7DE]",
       diffMs,
     };
   }
@@ -77,7 +81,8 @@ export function getDeadlineInfo(
       month: "short",
       day: "numeric",
     }),
-    badgeClass: "border-[#E5DDD2] bg-[#FAF7F2] text-[#786F68]",
+    badgeClass:
+      "border-[var(--border-main)] bg-[var(--bg-subtle)] text-[var(--text-muted)]",
     diffMs,
   };
 }
