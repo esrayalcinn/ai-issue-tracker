@@ -25,7 +25,8 @@ const WIDGET_URL = `http://localhost:${FRONTEND_PORT}/widget?desktop=1`;
 const BOARD_URL = `http://localhost:${FRONTEND_PORT}`;
 
 const WIN_WIDTH = 380;
-const WIN_HEIGHT = 600;
+const WIN_HEIGHT = 640;
+const TOP_CLIP = 40;
 
 let mainWindow = null;
 let tray = null;
@@ -33,43 +34,9 @@ let alwaysOnTop = true;
 let lastIgnoreMouse = null;
 const spawnedChildren = [];
 
-function stripNativeCaption(win) {
-  if (process.platform !== "win32") return Promise.resolve();
-  return new Promise((resolve) => {
-    try {
-      const buf = win.getNativeWindowHandle();
-      const hwnd =
-        buf.length >= 8 ? buf.readBigUInt64LE(0).toString() : buf.readUInt32LE(0).toString();
-      const psScript = [
-        'Add-Type -TypeDefinition @"',
-        "using System;",
-        "using System.Runtime.InteropServices;",
-        "public class WinStyle {",
-        '  [DllImport("user32.dll", EntryPoint="GetWindowLongPtrW")]',
-        "  public static extern IntPtr GetWindowLongPtr(IntPtr hWnd, int nIndex);",
-        '  [DllImport("user32.dll", EntryPoint="SetWindowLongPtrW")]',
-        "  public static extern IntPtr SetWindowLongPtr(IntPtr hWnd, int nIndex, IntPtr dwNewLong);",
-        '  [DllImport("user32.dll")]',
-        "  public static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);",
-        "}",
-        '"@',
-        `$h = [IntPtr]::new([Int64]${hwnd})`,
-        "$style = [WinStyle]::GetWindowLongPtr($h, -16).ToInt64()",
-        "$clean = $style -band (-bnot 0x00C40000)",
-        "[WinStyle]::SetWindowLongPtr($h, -16, [IntPtr]::new($clean)) | Out-Null",
-        "[WinStyle]::SetWindowPos($h, [IntPtr]::Zero, 0, 0, 0, 0, 0x0027) | Out-Null",
-      ].join("\n");
-      const encoded = Buffer.from(psScript, "utf16le").toString("base64");
-      const ps = spawn("powershell.exe", ["-NoProfile", "-EncodedCommand", encoded], {
-        windowsHide: true,
-        stdio: "ignore",
-      });
-      ps.on("exit", () => resolve());
-      ps.on("error", () => resolve());
-    } catch {
-      resolve();
-    }
-  });
+function clipGhostTitlebar(win) {
+  if (!win || win.isDestroyed()) return;
+  win.setShape([{ x: 0, y: TOP_CLIP, width: WIN_WIDTH, height: WIN_HEIGHT - TOP_CLIP }]);
 }
 
 function getPosFile() {
@@ -207,14 +174,19 @@ function createWindow() {
     event.preventDefault();
   });
 
-  // Strip Win32 WS_CAPTION + WS_THICKFRAME before revealing so Windows can never paint a ghost titlebar
-  mainWindow.webContents.once("did-finish-load", async () => {
-    await stripNativeCaption(mainWindow);
+  // Clip the top 40px via Win32 SetWindowRgn so Windows DWM can never render a ghost titlebar
+  clipGhostTitlebar(mainWindow);
+  mainWindow.on("focus", () => clipGhostTitlebar(mainWindow));
+  mainWindow.on("blur", () => clipGhostTitlebar(mainWindow));
+
+  mainWindow.webContents.once("did-finish-load", () => {
+    clipGhostTitlebar(mainWindow);
     setTimeout(() => {
       if (mainWindow && !mainWindow.isDestroyed()) {
+        clipGhostTitlebar(mainWindow);
         mainWindow.showInactive();
       }
-    }, 100);
+    }, 150);
   });
 
   mainWindow.loadURL(WIDGET_URL);
