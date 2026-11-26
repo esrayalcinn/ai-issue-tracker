@@ -11,10 +11,10 @@ interface CatMascotProps {
 }
 
 const SPRITE_BY_MOOD: Record<CatMood, string> = {
-  idle: "/mascot/cat-idle.jpg",
-  urgent: "/mascot/cat-idle.jpg",
-  happy: "/mascot/cat-happy.jpg",
-  sleeping: "/mascot/cat-sleep.jpg",
+  idle: "/mascot/cat-idle.png",
+  urgent: "/mascot/cat-idle.png",
+  happy: "/mascot/cat-happy.png",
+  sleeping: "/mascot/cat-sleep.png",
 };
 
 const SIZE_CLASSES = {
@@ -29,7 +29,7 @@ export function CatMascot({
   size = "lg",
   celebrating = false,
   onClick,
-  title = "Click to talk or pet",
+  title = "Click to wake Maviş",
 }: CatMascotProps) {
   const activeMood: CatMood = celebrating ? "happy" : mood;
   const src = SPRITE_BY_MOOD[activeMood];
@@ -43,9 +43,9 @@ export function CatMascot({
     >
       <img
         src={src}
-        alt="Fluffy blue-point cat mascot"
+        alt="Maviş the blue-point cat mascot"
         draggable={false}
-        className={`${SIZE_CLASSES[size]} select-none object-contain mix-blend-multiply transition-transform duration-200 group-hover:scale-[1.04] ${
+        className={`${SIZE_CLASSES[size]} select-none object-contain drop-shadow-[0_6px_12px_rgba(43,38,35,0.18)] transition-transform duration-200 group-hover:scale-[1.04] ${
           activeMood === "happy" ? "animate-cat-purr" : ""
         }`}
       />

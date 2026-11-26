@@ -1,80 +1,69 @@
-# AI-Integrated Issue Tracker
+<p align="center">
+  <img src="frontend/public/mascot/cat-idle.png" alt="Maviş" width="150" />
+</p>
 
-A personal issue tracker built with **FastAPI**, **Next.js (TypeScript)**, and **PostgreSQL (`pgvector`)**, using a hybrid AI architecture:
-- **Local embeddings** (`sentence-transformers` or Ollama `nomic-embed-text`) for unlimited, zero-cost duplicate detection and semantic search.
-- **Gemini API (Flash free tier)** for structured JSON triage (priority, labels, summaries) and tool-calling assistant features.
+<h1 align="center">Issue Notebook &amp; Maviş</h1>
 
-> **Privacy note:** On the Gemini API free tier, prompts may be used by Google to improve products. Keep real private/work data out of free-tier requests—use personal/test issues or switch to a paid/local model later.
-
----
-
-## Project Structure
-
-```text
-ai-issue-tracker/
-├── docker-compose.yml       # PostgreSQL 16 + pgvector
-├── db/init.sql              # Enables the `vector` extension on first boot
-├── .env.example             # Copy to .env and fill in GEMINI_API_KEY
-├── ROADMAP.md               # Step-by-step Mentor Mode milestones
-├── backend/                 # FastAPI + SQLAlchemy + pgvector + AI services
-│   ├── app/
-│   │   ├── main.py          # App entrypoint + /health endpoints
-│   │   ├── config.py        # Environment settings
-│   │   ├── db.py            # SQLAlchemy engine & get_db()
-│   │   ├── models/          # ORM tables (Milestone 1 — you write this)
-│   │   ├── schemas/         # Pydantic schemas (Milestone 1 & 4 — you write this)
-│   │   ├── routers/         # API endpoints (Milestone 1 — you write this)
-│   │   └── services/        # Embeddings & Gemini triage (Milestones 3 & 4)
-│   ├── evals/               # Seed & evaluation dataset (sample_issues.json)
-│   └── tests/               # pytest suite
-└── frontend/                # Next.js + TypeScript + Tailwind CSS
-    └── src/
-        ├── app/             # Pages & layout
-        └── lib/api.ts       # Backend API client
-```
+<p align="center">
+  A cozy pastel issue &amp; to-do tracker with local semantic duplicate detection, Gemini structured triage, tool-calling chat, and a frameless Windows desktop cat companion modeled after Maviş.
+</p>
 
 ---
 
-## Quickstart (Windows PowerShell)
-
-### 1. Create your `.env` file
-```powershell
-Copy-Item .env.example .env
-```
-Add your `GEMINI_API_KEY` from Google AI Studio when you reach Milestone 4 (you don't need it for Milestones 1–3!).
-
-### 2. Start PostgreSQL (`pgvector`)
-Make sure Docker Desktop is running, then:
-```powershell
-docker compose up -d
-```
-
-### 3. Set up and run the Backend (using `uv`)
-```powershell
-cd backend
-uv sync
-uv run uvicorn app.main:app --reload
-```
-Verify:
-- API docs: http://localhost:8000/docs
-- Health check: http://localhost:8000/health
-- DB check: http://localhost:8000/health/db
-
-Run backend tests:
-```powershell
-uv run pytest
-```
-
-### 4. Set up and run the Frontend
-In a second terminal:
-```powershell
-cd frontend
-npm install
-npm run dev
-```
-Open http://localhost:3000 — you should see **`API: online`** in the top-right badge.
+### Features
+* **Issue &amp; To-Do Notebook:** FastAPI + PostgreSQL (`pgvector`) + Next.js with quick-add, status/priority symbols, labels, and `due_at` deadlines.
+* **Local Duplicate Detection (Zero Rate Limits):** Embeds every issue locally with `sentence-transformers` (`all-MiniLM-L6-v2`, 384 dims) and queries `pgvector` cosine distance for live duplicate warnings while typing.
+* **Threshold Tuned with Real Evals:** Evaluated with `backend/evals/eval_duplicates.py` on `sample_issues.json` — tuning the similarity cutoff to **`0.45`** separated true duplicates (`0.486`–`0.702`) from unrelated issues (`<= 0.227`) at **100% precision / 100% recall**.
+* **Gemini Flash Auto-Tag (Structured JSON):** Enforces a strict Pydantic `TriageResult` schema with human-in-the-loop **Apply / Dismiss** and automatic fallback across Gemini Flash / Flash-Lite models on `503`/`429`.
+* **Maviş Tool-Calling Assistant:** Natural-language assistant grounded in live PostgreSQL tools (`list_issues`, `search_issues`, `get_issue_stats`, `create_issue` with deadline parsing).
+* **Maviş Desktop Pet (Electron):** Transparent, frameless, draggable cat that naps in the corner of your screen, wakes up automatically when a deadline is `< 1 hour` away, and opens a quick speech-bubble menu on click (`Ctrl + Shift + M` to hide/show).
 
 ---
 
-## Next Step
-Open [ROADMAP.md](./ROADMAP.md) and start **Milestone 1**!
+### Tech Stack
+* **Backend:** Python, FastAPI, SQLAlchemy 2.0, PostgreSQL + `pgvector` (Docker or Neon), `uv`, `pytest`
+* **AI:** `sentence-transformers` (local embeddings), `google-genai` (Gemini Flash + Flash-Lite fallback)
+* **Frontend &amp; Desktop:** Next.js, TypeScript, Tailwind CSS, Electron
+
+---
+
+### Quickstart
+
+1. **Configure `.env`**
+   ```powershell
+   Copy-Item .env.example .env
+   ```
+   Fill in `DATABASE_URL` (local Docker Postgres or free Neon cloud Postgres) and `GEMINI_API_KEY`.
+
+2. **Backend**
+   ```powershell
+   cd backend
+   uv sync
+   uv run uvicorn app.main:app --reload
+   ```
+
+3. **Frontend**
+   ```powershell
+   cd frontend
+   npm install
+   npm run dev
+   ```
+   Open http://localhost:3000 (full notebook) or http://localhost:3000/widget.
+
+4. **Maviş Desktop Pet (Windows)**
+   ```powershell
+   cd desktop
+   npm install
+   npm start
+   ```
+   To launch Maviş automatically when Windows starts:
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File .\install-startup.ps1
+   ```
+
+5. **Tests &amp; Duplicate Eval**
+   ```powershell
+   cd backend
+   uv run pytest
+   uv run python evals/eval_duplicates.py
+   ```

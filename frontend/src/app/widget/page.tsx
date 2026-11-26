@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import { FormEvent, MouseEvent as ReactMouseEvent, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   chatWithAssistant,
@@ -18,6 +18,17 @@ import { CatMascot, CatMood } from "@/components/CatMascot";
 import { PRIORITY_LABEL, PriorityIcon, StatusIcon } from "@/components/Icons";
 
 type BubbleView = "menu" | "tasks" | "add";
+
+declare global {
+  interface Window {
+    desktopPet?: {
+      setIgnoreMouse: (ignore: boolean) => void;
+      moveBy: (dx: number, dy: number) => void;
+      hide: () => void;
+      openBoard: () => void;
+    };
+  }
+}
 
 const PET_REPLIES = [
   "Purrrr~ Maviş loves head pats!",
@@ -39,6 +50,31 @@ export default function WidgetPage() {
   const [happy, setHappy] = useState(false);
   const [petCount, setPetCount] = useState(0);
   const [nowMs, setNowMs] = useState(() => Date.now());
+  const [isDesktopPet, setIsDesktopPet] = useState(false);
+  const dragRef = useRef<{
+    active: boolean;
+    moved: boolean;
+    lastX: number;
+    lastY: number;
+  }>({ active: false, moved: false, lastX: 0, lastY: 0 });
+
+  // Detect frameless transparent Electron desktop pet mode
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const desktopMode = Boolean(window.desktopPet) || params.get("desktop") === "1";
+    setIsDesktopPet(desktopMode);
+
+    if (desktopMode) {
+      document.documentElement.style.background = "transparent";
+      document.body.style.background = "transparent";
+      window.desktopPet?.setIgnoreMouse(true);
+    }
+
+    return () => {
+      document.documentElement.style.background = "";
+      document.body.style.background = "";
+    };
+  }, []);
 
   const loadOpenIssues = useCallback(async () => {
     try {
@@ -58,6 +94,12 @@ export default function WidgetPage() {
     return () => clearInterval(poll);
   }, [loadOpenIssues]);
 
+  function setInteractive(active: boolean) {
+    if (window.desktopPet) {
+      window.desktopPet.setIgnoreMouse(!active);
+    }
+  }
+
   function triggerHappy(message: string) {
     setHappy(true);
     setReply(message);
@@ -65,6 +107,10 @@ export default function WidgetPage() {
   }
 
   function handleToggleCat() {
+    if (dragRef.current.moved) {
+      dragRef.current.moved = false;
+      return;
+    }
     if (awake) {
       setAwake(false);
       setView("menu");
@@ -73,6 +119,39 @@ export default function WidgetPage() {
       setAwake(true);
       loadOpenIssues();
     }
+  }
+
+  function handleCatMouseDown(e: ReactMouseEvent) {
+    if (!window.desktopPet || e.button !== 0) return;
+    dragRef.current = {
+      active: true,
+      moved: false,
+      lastX: e.screenX,
+      lastY: e.screenY,
+    };
+
+    const onMouseMove = (moveEvent: MouseEvent) => {
+      if (!dragRef.current.active) return;
+      const dx = moveEvent.screenX - dragRef.current.lastX;
+      const dy = moveEvent.screenY - dragRef.current.lastY;
+      if (Math.abs(dx) > 2 || Math.abs(dy) > 2) {
+        dragRef.current.moved = true;
+      }
+      if (dragRef.current.moved) {
+        window.desktopPet?.moveBy(dx, dy);
+        dragRef.current.lastX = moveEvent.screenX;
+        dragRef.current.lastY = moveEvent.screenY;
+      }
+    };
+
+    const onMouseUp = () => {
+      dragRef.current.active = false;
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+    };
+
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
   }
 
   async function handleQuickAdd(e: FormEvent) {
@@ -123,7 +202,6 @@ export default function WidgetPage() {
   const reminders = getUpcomingReminders(issues, nowMs);
   const topReminder = reminders[0] ?? null;
 
-  // Maviş wakes up automatically when a task is overdue or <= 1 hour away!
   const hasImmediateDeadline =
     topReminder !== null &&
     (topReminder.info.urgency === "overdue" || topReminder.info.urgency === "hour");
@@ -153,27 +231,36 @@ export default function WidgetPage() {
     : "";
 
   let restingPill = "zzZ";
-  let restingClass = "text-[#A3988D]";
+  let restingClass =
+    "rounded-full border border-[#E5DDD2] bg-[#FFFDF9]/95 px-2.5 py-0.5 text-[#8C8177] shadow-xs";
   if (hasImmediateDeadline && topReminder) {
     restingPill = `Maviş: "${shortTitle}" ${topReminder.info.label}!`;
     restingClass =
-      "rounded-full border border-[#EFCFD6] bg-[#FAE7EB] px-2.5 py-0.5 text-[#9E4555]";
+      "rounded-full border border-[#EFCFD6] bg-[#FAE7EB] px-2.5 py-0.5 text-[#9E4555] shadow-xs";
   } else if (topReminder && topReminder.info.urgency === "soon") {
     restingPill = `zzZ · "${shortTitle}" ${topReminder.info.label}`;
     restingClass =
-      "rounded-full border border-[#EFE0B4] bg-[#FCF3D9] px-2.5 py-0.5 text-[#8A671F]";
+      "rounded-full border border-[#EFE0B4] bg-[#FCF3D9] px-2.5 py-0.5 text-[#8A671F] shadow-xs";
   } else if (topReminder && topReminder.info.urgency === "week") {
     restingPill = `zzZ · "${shortTitle}" ${topReminder.info.label}`;
     restingClass =
-      "rounded-full border border-[#C9DFEB] bg-[#E5F0F6] px-2.5 py-0.5 text-[#3E6B80]";
+      "rounded-full border border-[#C9DFEB] bg-[#E5F0F6] px-2.5 py-0.5 text-[#3E6B80] shadow-xs";
   } else if (urgentCount > 0) {
     restingPill = `zzZ · ${urgentCount} urgent`;
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-end bg-[#FAF7F2] px-4 pb-8 pt-6 text-[#2B2623]">
+    <main
+      className={`flex min-h-screen flex-col justify-end overflow-hidden px-3 pb-3 pt-4 text-[#2B2623] ${
+        isDesktopPet ? "items-end bg-transparent" : "items-center bg-[#FAF7F2]"
+      }`}
+    >
       {awake && (
-        <div className="animate-cat-float relative mb-3 w-full max-w-xs rounded-2xl border border-[#E2D8CB] bg-[#FFFDF9] p-4 shadow-lg shadow-[#2B2623]/10">
+        <div
+          onMouseEnter={() => setInteractive(true)}
+          onMouseLeave={() => setInteractive(false)}
+          className="animate-cat-float relative mb-3 w-full max-w-xs rounded-2xl border border-[#E2D8CB] bg-[#FFFDF9] p-4 shadow-xl shadow-[#2B2623]/15"
+        >
           <div className="mb-2.5 flex items-start justify-between gap-2">
             <div>
               <span className="mb-0.5 block font-display text-xs font-semibold text-[#8C6D53]">
@@ -239,16 +326,39 @@ export default function WidgetPage() {
               Pet
             </button>
 
-            <Link
-              href="/"
-              className="rounded-xl border border-[#DCD4F0] bg-[#F2EFFA] px-2.5 py-1.5 text-[11px] font-medium text-[#554782] transition hover:bg-[#E7E0F7]"
-            >
-              Board
-            </Link>
+            {isDesktopPet ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => window.desktopPet?.openBoard()}
+                  className="rounded-xl border border-[#DCD4F0] bg-[#F2EFFA] px-2.5 py-1.5 text-[11px] font-medium text-[#554782] transition hover:bg-[#E7E0F7]"
+                >
+                  Board
+                </button>
+                <button
+                  type="button"
+                  title="Hide Maviş (press Ctrl+Shift+M to bring him back)"
+                  onClick={() => {
+                    setAwake(false);
+                    window.desktopPet?.hide();
+                  }}
+                  className="rounded-xl border border-[#E5DDD2] bg-[#FAF7F2] px-2.5 py-1.5 text-[11px] font-medium text-[#786F68] transition hover:bg-[#F0E9DF]"
+                >
+                  Hide
+                </button>
+              </>
+            ) : (
+              <Link
+                href="/"
+                className="rounded-xl border border-[#DCD4F0] bg-[#F2EFFA] px-2.5 py-1.5 text-[11px] font-medium text-[#554782] transition hover:bg-[#E7E0F7]"
+              >
+                Board
+              </Link>
+            )}
           </div>
 
           {view === "tasks" && (
-            <div className="mb-3 max-h-60 divide-y divide-[#F0EAE2] overflow-y-auto rounded-xl border border-[#ECE5DC] bg-[#FAF7F2]">
+            <div className="mb-3 max-h-56 divide-y divide-[#F0EAE2] overflow-y-auto rounded-xl border border-[#ECE5DC] bg-[#FAF7F2]">
               {issues.length === 0 ? (
                 <p className="py-4 text-center text-[11px] text-[#8C8177]">
                   No open tasks!
@@ -386,11 +496,22 @@ export default function WidgetPage() {
             </button>
           </form>
 
-          <div className="absolute -bottom-2 left-1/2 h-4 w-4 -translate-x-1/2 rotate-45 border-b border-r border-[#E2D8CB] bg-[#FFFDF9]" />
+          <div
+            className={`absolute -bottom-2 h-4 w-4 rotate-45 border-b border-r border-[#E2D8CB] bg-[#FFFDF9] ${
+              isDesktopPet ? "right-16" : "left-1/2 -translate-x-1/2"
+            }`}
+          />
         </div>
       )}
 
-      <div className="flex flex-col items-center">
+      <div
+        onMouseEnter={() => setInteractive(true)}
+        onMouseLeave={() => {
+          if (!dragRef.current.active) setInteractive(false);
+        }}
+        onMouseDown={handleCatMouseDown}
+        className="flex flex-col items-center cursor-grab active:cursor-grabbing"
+      >
         {!awake && (
           <button
             type="button"

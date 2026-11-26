@@ -7,6 +7,8 @@ from app.db import Base, engine
 from app.models import issue as _issue_model  # noqa: F401
 from app.routers import assistant, issues
 
+with engine.begin() as _conn:
+    _conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
