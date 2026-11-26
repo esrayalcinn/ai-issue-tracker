@@ -8,6 +8,11 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+psycopg://postgres:postgres@localhost:5433/issue_tracker"
     gemini_api_key: str = ""
     gemini_model: str = "gemini-3.8-flash"
+    gemini_fallback_models: list[str] = [
+        "gemini-3.7-flash",
+        "gemini-3.5-flash-lite",
+        "gemini-2.5-flash-lite",
+    ]
     embedding_model: str = "all-MiniLM-L6-v2"
     cors_origins: list[str] = ["http://localhost:3000", "http://localhost:3001"]
 

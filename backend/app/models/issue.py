@@ -12,7 +12,7 @@ class Issue(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     title: Mapped[str] = mapped_column(String(200), nullable=False)
-    description: Mapped[str] = mapped_column(Text, nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False, default="")
     labels: Mapped[list[str]] = mapped_column(ARRAY(String(30)), nullable=False, default=list)
     priority: Mapped[str | None] = mapped_column(String(20), default=None)
     status: Mapped[str] = mapped_column(String(20), nullable=False, index=True, default="open")

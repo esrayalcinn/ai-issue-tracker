@@ -24,7 +24,7 @@ export interface Issue {
 
 export interface IssueCreate {
   title: string;
-  description: string;
+  description?: string;
   labels?: string[];
   priority?: IssuePriority | null;
   status?: IssueStatus;
@@ -90,7 +90,7 @@ export interface SimilarIssue {
 
 export async function checkDuplicates(
   title: string,
-  description: string,
+  description = "",
 ): Promise<SimilarIssue[]> {
   const res = await fetch(`${API_URL}/issues/check-duplicates`, {
     method: "POST",
@@ -114,6 +114,44 @@ export async function triageIssue(id: number): Promise<TriageResult> {
   });
   if (!res.ok) {
     let detail = `Failed to triage issue (${res.status})`;
+    try {
+      const body = await res.json();
+      if (body?.detail) detail = body.detail;
+    } catch {
+      // ignore non-JSON error body
+    }
+    throw new Error(detail);
+  }
+  return res.json();
+}
+
+export interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
+export interface ToolCallLog {
+  name: string;
+  args: Record<string, unknown>;
+}
+
+export interface ChatResponse {
+  reply: string;
+  tools_used: ToolCallLog[];
+  mutated: boolean;
+}
+
+export async function chatWithAssistant(
+  message: string,
+  history: ChatMessage[],
+): Promise<ChatResponse> {
+  const res = await fetch(`${API_URL}/assistant/chat`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ message, history }),
+  });
+  if (!res.ok) {
+    let detail = `Assistant error (${res.status})`;
     try {
       const body = await res.json();
       if (body?.detail) detail = body.detail;

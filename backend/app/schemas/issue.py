@@ -7,14 +7,14 @@ IssuePriority = Literal["low", "medium", "high", "urgent"]
 
 class IssueCreate(BaseModel):
     title: str = Field(min_length=1, max_length=200)
-    description: str = Field(min_length=1)
+    description: str = Field(default="")
     labels: list[str] = Field(default_factory=list)
     priority: IssuePriority | None = None
     status: IssueStatus = Field(default="open")
 
 class IssueUpdate(BaseModel):
     title: str | None = Field(None, min_length=1, max_length=200)
-    description: str | None = Field(None, min_length=1)
+    description: str | None = None
     labels: list[str] | None = None
     priority: IssuePriority | None = None
     status: IssueStatus | None = None
@@ -34,7 +34,7 @@ class IssueRead(BaseModel):
 
 class DuplicateCheckRequest(BaseModel):
     title: str = Field(min_length=1, max_length=200)
-    description: str = Field(min_length=1)
+    description: str = Field(default="")
     threshold: float = Field(default=0.45, ge=0.0, le=1.0)
 
 

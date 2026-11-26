@@ -30,7 +30,7 @@ export function NewIssueForm({ onCreate, onCancel }: NewIssueFormProps) {
     const trimmedTitle = title.trim();
     const trimmedDesc = description.trim();
 
-    if (trimmedTitle.length < 4 || trimmedDesc.length < 4) {
+    if (trimmedTitle.length < 4) {
       setDuplicates(null);
       setCheckingDups(false);
       return;
@@ -64,8 +64,8 @@ export function NewIssueForm({ onCreate, onCancel }: NewIssueFormProps) {
 
     const trimmedTitle = title.trim();
     const trimmedDesc = description.trim();
-    if (!trimmedTitle || !trimmedDesc) {
-      setError("Title and description are required.");
+    if (!trimmedTitle) {
+      setError("Title is required.");
       return;
     }
 
@@ -134,10 +134,9 @@ export function NewIssueForm({ onCreate, onCancel }: NewIssueFormProps) {
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Write a few notes or steps to reproduce..."
+            placeholder="Optional notes or steps to reproduce..."
             rows={4}
             className="w-full resize-none rounded-xl border border-[#E5DDD2] bg-[#FAF7F2] p-3 text-sm text-[#2B2623] placeholder-[#A89E94] focus:border-[#D49A80] focus:bg-[#FFFDF9] focus:outline-none"
-            required
           />
 
           {checkingDups && (

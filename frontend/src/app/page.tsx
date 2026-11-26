@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useState } from "react";
 import {
   checkBackendHealth,
   createIssue,
@@ -13,6 +13,7 @@ import {
   listIssues,
   updateIssue,
 } from "@/lib/api";
+import { AssistantDrawer } from "@/components/AssistantDrawer";
 import {
   CatDoodle,
   PRIORITY_LABEL,
@@ -38,6 +39,9 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showNewForm, setShowNewForm] = useState(false);
+  const [showAssistant, setShowAssistant] = useState(false);
+  const [quickTitle, setQuickTitle] = useState("");
+  const [quickSaving, setQuickSaving] = useState(false);
 
   const [statusFilter, setStatusFilter] = useState<IssueStatus | "">("");
   const [priorityFilter, setPriorityFilter] = useState<IssuePriority | "">("");
@@ -74,6 +78,23 @@ export default function HomePage() {
     await createIssue(payload);
     setShowNewForm(false);
     await fetchIssues();
+  }
+
+  async function handleQuickAdd(e: FormEvent) {
+    e.preventDefault();
+    const trimmed = quickTitle.trim();
+    if (!trimmed || quickSaving) return;
+    setQuickSaving(true);
+    setError(null);
+    try {
+      await createIssue({ title: trimmed, description: "" });
+      setQuickTitle("");
+      await fetchIssues();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to quick-add item");
+    } finally {
+      setQuickSaving(false);
+    }
   }
 
   async function handleUpdate(id: number, payload: IssueUpdate) {
@@ -114,14 +135,44 @@ export default function HomePage() {
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={() => setShowNewForm(true)}
-            className="rounded-xl bg-[#C96B4B] px-4 py-2 text-xs font-medium text-white shadow-xs transition hover:bg-[#B55C3E]"
-          >
-            + New issue
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowAssistant((prev) => !prev)}
+              className="rounded-xl border border-[#DCD4F0] bg-[#F2EFFA] px-3.5 py-2 text-xs font-medium text-[#5B4D8A] transition hover:border-[#C5B8E6] hover:bg-[#E9E3F7]"
+            >
+              {showAssistant ? "Hide assistant" : "Ask assistant"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowNewForm(true)}
+              className="rounded-xl bg-[#C96B4B] px-4 py-2 text-xs font-medium text-white shadow-xs transition hover:bg-[#B55C3E]"
+            >
+              + New issue
+            </button>
+          </div>
         </header>
+
+        <form
+          onSubmit={handleQuickAdd}
+          className="mb-5 flex items-center gap-2 rounded-2xl border border-[#E5DDD2] bg-[#FFFDF9] px-3.5 py-2 shadow-2xs"
+        >
+          <input
+            type="text"
+            value={quickTitle}
+            onChange={(e) => setQuickTitle(e.target.value)}
+            placeholder="Quick add a to-do or bug and press Enter..."
+            maxLength={200}
+            className="flex-1 bg-transparent text-sm text-[#2B2623] placeholder-[#A89E94] focus:outline-none"
+          />
+          <button
+            type="submit"
+            disabled={quickSaving || !quickTitle.trim()}
+            className="rounded-lg bg-[#F3EDE5] px-3 py-1 text-xs font-medium text-[#5E554E] transition hover:bg-[#E8DFD3] hover:text-[#2B2623] disabled:opacity-40"
+          >
+            {quickSaving ? "Adding..." : "Add"}
+          </button>
+        </form>
 
         {apiOffline && (
           <div className="mb-5 rounded-xl border border-[#EFCFD6] bg-[#FAE7EB] px-4 py-2.5 text-xs text-[#9E4555]">
@@ -237,6 +288,13 @@ export default function HomePage() {
         <NewIssueForm
           onCreate={handleCreate}
           onCancel={() => setShowNewForm(false)}
+        />
+      )}
+
+      {showAssistant && (
+        <AssistantDrawer
+          onClose={() => setShowAssistant(false)}
+          onBoardMutated={fetchIssues}
         />
       )}
     </div>

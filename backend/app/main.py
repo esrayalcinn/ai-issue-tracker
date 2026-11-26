@@ -5,7 +5,7 @@ from sqlalchemy import text
 from app.config import settings
 from app.db import Base, engine
 from app.models import issue as _issue_model  # noqa: F401
-from app.routers import issues
+from app.routers import assistant, issues
 
 Base.metadata.create_all(bind=engine)
 
@@ -38,3 +38,4 @@ def db_health_check() -> dict[str, str]:
 
 
 app.include_router(issues.router)
+app.include_router(assistant.router)
