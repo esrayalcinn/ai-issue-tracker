@@ -30,7 +30,47 @@ const WIN_HEIGHT = 600;
 let mainWindow = null;
 let tray = null;
 let alwaysOnTop = true;
+let lastIgnoreMouse = null;
 const spawnedChildren = [];
+
+function stripNativeCaption(win) {
+  if (process.platform !== "win32") return Promise.resolve();
+  return new Promise((resolve) => {
+    try {
+      const buf = win.getNativeWindowHandle();
+      const hwnd =
+        buf.length >= 8 ? buf.readBigUInt64LE(0).toString() : buf.readUInt32LE(0).toString();
+      const psScript = [
+        'Add-Type -TypeDefinition @"',
+        "using System;",
+        "using System.Runtime.InteropServices;",
+        "public class WinStyle {",
+        '  [DllImport("user32.dll", EntryPoint="GetWindowLongPtrW")]',
+        "  public static extern IntPtr GetWindowLongPtr(IntPtr hWnd, int nIndex);",
+        '  [DllImport("user32.dll", EntryPoint="SetWindowLongPtrW")]',
+        "  public static extern IntPtr SetWindowLongPtr(IntPtr hWnd, int nIndex, IntPtr dwNewLong);",
+        '  [DllImport("user32.dll")]',
+        "  public static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);",
+        "}",
+        '"@',
+        `$h = [IntPtr]::new([Int64]${hwnd})`,
+        "$style = [WinStyle]::GetWindowLongPtr($h, -16).ToInt64()",
+        "$clean = $style -band (-bnot 0x00C40000)",
+        "[WinStyle]::SetWindowLongPtr($h, -16, [IntPtr]::new($clean)) | Out-Null",
+        "[WinStyle]::SetWindowPos($h, [IntPtr]::Zero, 0, 0, 0, 0, 0x0027) | Out-Null",
+      ].join("\n");
+      const encoded = Buffer.from(psScript, "utf16le").toString("base64");
+      const ps = spawn("powershell.exe", ["-NoProfile", "-EncodedCommand", encoded], {
+        windowsHide: true,
+        stdio: "ignore",
+      });
+      ps.on("exit", () => resolve());
+      ps.on("error", () => resolve());
+    } catch {
+      resolve();
+    }
+  });
+}
 
 function getPosFile() {
   return path.join(app.getPath("userData"), "mavis-position.json");
@@ -159,20 +199,22 @@ function createWindow() {
 
   mainWindow.setMenu(null);
   mainWindow.removeMenu();
+  lastIgnoreMouse = true;
   mainWindow.setIgnoreMouseEvents(true, { forward: true });
 
-  // Prevent Electron from calling Win32 SetWindowText (which flashes a ghost titlebar on transparent Windows)
+  // Prevent Electron from calling Win32 SetWindowText
   mainWindow.on("page-title-updated", (event) => {
     event.preventDefault();
   });
 
-  // Wait until the page has loaded and applied transparent styling before revealing
-  mainWindow.webContents.once("did-finish-load", () => {
+  // Strip Win32 WS_CAPTION + WS_THICKFRAME before revealing so Windows can never paint a ghost titlebar
+  mainWindow.webContents.once("did-finish-load", async () => {
+    await stripNativeCaption(mainWindow);
     setTimeout(() => {
       if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.showInactive();
       }
-    }, 150);
+    }, 100);
   });
 
   mainWindow.loadURL(WIDGET_URL);
@@ -227,7 +269,8 @@ function createTray() {
 }
 
 ipcMain.on("pet:set-ignore-mouse", (_event, ignore) => {
-  if (!mainWindow) return;
+  if (!mainWindow || lastIgnoreMouse === ignore) return;
+  lastIgnoreMouse = ignore;
   mainWindow.setIgnoreMouseEvents(ignore, { forward: true });
 });
 
