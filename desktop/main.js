@@ -161,6 +161,11 @@ function createWindow() {
   mainWindow.removeMenu();
   mainWindow.setIgnoreMouseEvents(true, { forward: true });
 
+  // Prevent Electron from calling Win32 SetWindowText (which flashes a ghost titlebar on transparent Windows)
+  mainWindow.on("page-title-updated", (event) => {
+    event.preventDefault();
+  });
+
   // Wait until the page has loaded and applied transparent styling before revealing
   mainWindow.webContents.once("did-finish-load", () => {
     setTimeout(() => {
