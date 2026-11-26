@@ -65,6 +65,7 @@ export default function WidgetPage() {
     setIsDesktopPet(desktopMode);
 
     if (desktopMode) {
+      document.title = "";
       document.documentElement.style.background = "transparent";
       document.body.style.background = "transparent";
       window.desktopPet?.setIgnoreMouse(true);

@@ -107,8 +107,10 @@ function placeInCorner(win, corner = "bottom-right") {
   } else if (corner === "top-right") {
     targetY = y + 8;
   }
-  win.setPosition(Math.round(targetX), Math.round(targetY));
-  savePosition(Math.round(targetX), Math.round(targetY));
+  const rx = Math.round(targetX);
+  const ry = Math.round(targetY);
+  win.setBounds({ x: rx, y: ry, width: WIN_WIDTH, height: WIN_HEIGHT });
+  savePosition(rx, ry);
 }
 
 function toggleVisibility() {
@@ -122,9 +124,18 @@ function toggleVisibility() {
 }
 
 function createWindow() {
+  const saved = loadSavedPosition();
+  const { x, y, width, height } = screen.getPrimaryDisplay().workArea;
+  const startX = saved ? Math.round(saved.x) : Math.round(x + width - WIN_WIDTH - 8);
+  const startY = saved ? Math.round(saved.y) : Math.round(y + height - WIN_HEIGHT - 4);
+
   mainWindow = new BrowserWindow({
+    x: startX,
+    y: startY,
     width: WIN_WIDTH,
     height: WIN_HEIGHT,
+    title: "",
+    show: false,
     transparent: true,
     frame: false,
     thickFrame: false,
@@ -132,6 +143,10 @@ function createWindow() {
     autoHideMenuBar: true,
     hasShadow: false,
     resizable: false,
+    minimizable: false,
+    maximizable: false,
+    fullscreenable: false,
+    useContentSize: true,
     alwaysOnTop,
     skipTaskbar: true,
     backgroundColor: "#00000000",
@@ -142,18 +157,19 @@ function createWindow() {
     },
   });
 
-  // Eliminates the Windows 11 ghost titlebar strip on frameless transparent windows
   mainWindow.setMenu(null);
   mainWindow.removeMenu();
-
-  const saved = loadSavedPosition();
-  if (saved) {
-    mainWindow.setPosition(Math.round(saved.x), Math.round(saved.y));
-  } else {
-    placeInCorner(mainWindow, "bottom-right");
-  }
-
   mainWindow.setIgnoreMouseEvents(true, { forward: true });
+
+  // Wait until the page has loaded and applied transparent styling before revealing
+  mainWindow.webContents.once("did-finish-load", () => {
+    setTimeout(() => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.showInactive();
+      }
+    }, 150);
+  });
+
   mainWindow.loadURL(WIDGET_URL);
 }
 
@@ -212,10 +228,10 @@ ipcMain.on("pet:set-ignore-mouse", (_event, ignore) => {
 
 ipcMain.on("pet:move-by", (_event, dx, dy) => {
   if (!mainWindow) return;
-  const [curX, curY] = mainWindow.getPosition();
-  const nextX = Math.round(curX + Number(dx || 0));
-  const nextY = Math.round(curY + Number(dy || 0));
-  mainWindow.setPosition(nextX, nextY);
+  const bounds = mainWindow.getBounds();
+  const nextX = Math.round(bounds.x + Number(dx || 0));
+  const nextY = Math.round(bounds.y + Number(dy || 0));
+  mainWindow.setBounds({ x: nextX, y: nextY, width: WIN_WIDTH, height: WIN_HEIGHT });
   savePosition(nextX, nextY);
 });
 
