@@ -11,6 +11,7 @@ class IssueCreate(BaseModel):
     labels: list[str] = Field(default_factory=list)
     priority: IssuePriority | None = None
     status: IssueStatus = Field(default="open")
+    due_at: datetime | None = None
 
 class IssueUpdate(BaseModel):
     title: str | None = Field(None, min_length=1, max_length=200)
@@ -18,6 +19,7 @@ class IssueUpdate(BaseModel):
     labels: list[str] | None = None
     priority: IssuePriority | None = None
     status: IssueStatus | None = None
+    due_at: datetime | None = None
 
 class IssueRead(BaseModel):
     id: int
@@ -26,6 +28,7 @@ class IssueRead(BaseModel):
     labels: list[str]
     priority: IssuePriority | None
     status: IssueStatus
+    due_at: datetime | None = None
     created_at: datetime
     updated_at: datetime
 

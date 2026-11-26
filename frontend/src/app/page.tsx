@@ -124,7 +124,6 @@ export default function HomePage() {
   }
 
   const openIssues = issues.filter((i) => i.status !== "done");
-  const urgentCount = openIssues.filter((i) => i.priority === "urgent").length;
 
   return (
     <div className="min-h-screen bg-[#FAF7F2] text-[#2B2623]">
@@ -295,8 +294,7 @@ export default function HomePage() {
 
       {!showAssistant && (
         <CatCompanion
-          openCount={openIssues.length}
-          urgentCount={urgentCount}
+          openIssues={openIssues}
           celebrating={celebrating}
           onNewIssue={() => setShowNewForm(true)}
           onOpenFullChat={() => setShowAssistant(true)}

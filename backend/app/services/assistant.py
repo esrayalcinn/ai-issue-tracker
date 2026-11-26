@@ -1,5 +1,6 @@
 """Gemini tool-calling assistant service grounded in live PostgreSQL issues."""
 
+from datetime import datetime, timezone
 from typing import Any
 
 from google.genai import types
@@ -13,11 +14,11 @@ from app.services.llm import generate_with_fallback
 
 MAX_TOOL_ROUNDS = 5
 
-ASSISTANT_SYSTEM_PROMPT = """You are a helpful, concise personal assistant inside an issue & to-do notebook.
+ASSISTANT_SYSTEM_PROMPT = """You are Maviş, a helpful, concise personal cat assistant inside an issue & to-do notebook.
 Always use your tools to inspect the user's real PostgreSQL issues instead of guessing.
-When referring to an issue, include its #id and title.
-If the user asks to add/create a task or bug, call `create_issue` directly and confirm what was saved.
-Keep replies short, clear, and practical.
+When referring to an issue, include its #id, title, and due_at if it has one.
+If the user asks to add/create a task or bug (optionally with a deadline like "tomorrow at 5pm" or "Friday"), convert it to an ISO 8601 timestamp using the current date/time provided and call `create_issue`.
+Keep replies short, warm, and practical.
 """
 
 TOOL_DECLARATIONS = types.Tool(
@@ -99,6 +100,10 @@ TOOL_DECLARATIONS = types.Tool(
                         items=types.Schema(type=types.Type.STRING),
                         description="Optional list of lowercase labels",
                     ),
+                    "due_at": types.Schema(
+                        type=types.Type.STRING,
+                        description="Optional ISO 8601 deadline timestamp (e.g. 2026-11-28T17:00:00+03:00)",
+                    ),
                 },
                 required=["title"],
             ),
@@ -115,6 +120,7 @@ def _serialize_issue(issue: Issue) -> dict[str, Any]:
         "status": issue.status,
         "priority": issue.priority,
         "labels": issue.labels,
+        "due_at": issue.due_at.isoformat() if issue.due_at else None,
     }
 
 
@@ -181,12 +187,21 @@ def _execute_tool(
             )
         )[:5]
 
+        due_at = None
+        raw_due = args.get("due_at")
+        if raw_due:
+            try:
+                due_at = datetime.fromisoformat(str(raw_due).replace("Z", "+00:00"))
+            except ValueError:
+                due_at = None
+
         issue = Issue(
             title=title,
             description=description,
             priority=priority,
             labels=labels,
             status="open",
+            due_at=due_at,
         )
         issue.embedding = embed_issue(issue.title, issue.description)
         db.add(issue)
@@ -215,11 +230,18 @@ def run_assistant_chat(
     tools_used: list[ToolCallLog] = []
     mutated = False
 
+    now_local = datetime.now().astimezone()
+    system_prompt = (
+        f"{ASSISTANT_SYSTEM_PROMPT}\n"
+        f"Current local date & time: {now_local.strftime('%A, %Y-%m-%d %H:%M %z')} "
+        f"(UTC: {datetime.now(timezone.utc).isoformat()})."
+    )
+
     for _ in range(MAX_TOOL_ROUNDS):
         response = generate_with_fallback(
             contents=contents,
             config=types.GenerateContentConfig(
-                system_instruction=ASSISTANT_SYSTEM_PROMPT,
+                system_instruction=system_prompt,
                 tools=[TOOL_DECLARATIONS],
                 temperature=0.3,
             ),

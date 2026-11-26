@@ -14,7 +14,11 @@ class Settings(BaseSettings):
         "gemini-2.5-flash-lite",
     ]
     embedding_model: str = "all-MiniLM-L6-v2"
-    cors_origins: list[str] = ["http://localhost:3000", "http://localhost:3001"]
+    cors_origins: list[str] = [
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "http://localhost:3050",
+    ]
 
     model_config = SettingsConfigDict(
         env_file=str(ROOT_DIR / ".env"),

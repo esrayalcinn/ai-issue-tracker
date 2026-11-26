@@ -7,6 +7,7 @@ import {
   IssuePriority,
   SimilarIssue,
 } from "@/lib/api";
+import { fromDateTimeLocalValue } from "@/lib/deadlines";
 import { PRIORITY_LABEL, PriorityIcon } from "@/components/Icons";
 
 interface NewIssueFormProps {
@@ -21,6 +22,7 @@ export function NewIssueForm({ onCreate, onCancel }: NewIssueFormProps) {
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState<IssuePriority | null>(null);
   const [labelsInput, setLabelsInput] = useState("");
+  const [dueInput, setDueInput] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [checkingDups, setCheckingDups] = useState(false);
   const [duplicates, setDuplicates] = useState<SimilarIssue[] | null>(null);
@@ -81,11 +83,13 @@ export function NewIssueForm({ onCreate, onCancel }: NewIssueFormProps) {
         description: trimmedDesc,
         priority,
         labels,
+        due_at: fromDateTimeLocalValue(dueInput),
       });
       setTitle("");
       setDescription("");
       setPriority(null);
       setLabelsInput("");
+      setDueInput("");
       setDuplicates(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create issue");
@@ -198,17 +202,31 @@ export function NewIssueForm({ onCreate, onCancel }: NewIssueFormProps) {
             </div>
           </div>
 
-          <div>
-            <span className="mb-1.5 block text-xs font-medium text-[#786F68]">
-              Labels (comma-separated)
-            </span>
-            <input
-              type="text"
-              value={labelsInput}
-              onChange={(e) => setLabelsInput(e.target.value)}
-              placeholder="bug, frontend, study"
-              className="w-full rounded-xl border border-[#E5DDD2] bg-[#FAF7F2] px-3 py-2 text-sm text-[#2B2623] placeholder-[#A89E94] focus:border-[#D49A80] focus:bg-[#FFFDF9] focus:outline-none"
-            />
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div>
+              <span className="mb-1.5 block text-xs font-medium text-[#786F68]">
+                Due date &amp; time (optional)
+              </span>
+              <input
+                type="datetime-local"
+                value={dueInput}
+                onChange={(e) => setDueInput(e.target.value)}
+                className="w-full rounded-xl border border-[#E5DDD2] bg-[#FAF7F2] px-3 py-2 text-xs text-[#2B2623] focus:border-[#D49A80] focus:bg-[#FFFDF9] focus:outline-none"
+              />
+            </div>
+
+            <div>
+              <span className="mb-1.5 block text-xs font-medium text-[#786F68]">
+                Labels (comma-separated)
+              </span>
+              <input
+                type="text"
+                value={labelsInput}
+                onChange={(e) => setLabelsInput(e.target.value)}
+                placeholder="bug, frontend, study"
+                className="w-full rounded-xl border border-[#E5DDD2] bg-[#FAF7F2] px-3 py-2 text-xs text-[#2B2623] placeholder-[#A89E94] focus:border-[#D49A80] focus:bg-[#FFFDF9] focus:outline-none"
+              />
+            </div>
           </div>
 
           <div className="flex justify-end gap-2 border-t border-[#ECE5DC] pt-4">

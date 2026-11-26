@@ -1,12 +1,12 @@
 "use client";
 
-import { FormEvent, useState } from "react";
-import { chatWithAssistant } from "@/lib/api";
+import { FormEvent, useEffect, useState } from "react";
+import { chatWithAssistant, Issue } from "@/lib/api";
+import { getUpcomingReminders } from "@/lib/deadlines";
 import { CatMascot, CatMood } from "@/components/CatMascot";
 
 interface CatCompanionProps {
-  openCount: number;
-  urgentCount: number;
+  openIssues: Issue[];
   celebrating?: boolean;
   onNewIssue: () => void;
   onOpenFullChat?: () => void;
@@ -15,15 +15,14 @@ interface CatCompanionProps {
 }
 
 const PET_REPLIES = [
-  "Purrrr~ thank you for the head pats!",
+  "Purrrr~ Maviş loves head pats!",
   "Mrrp! Feeling extra fluffy now.",
   "Hehe, more chin scratches please~",
   "Purr... you're doing great today!",
 ];
 
 export function CatCompanion({
-  openCount,
-  urgentCount,
+  openIssues,
   celebrating = false,
   onNewIssue,
   onOpenFullChat,
@@ -36,13 +35,29 @@ export function CatCompanion({
   const [reply, setReply] = useState<string | null>(null);
   const [thinking, setThinking] = useState(false);
   const [input, setInput] = useState("");
+  const [nowMs, setNowMs] = useState(() => Date.now());
 
-  // Sleeps peacefully until clicked awake (or celebrating a completed task)
+  // Refresh deadline countdowns every 60 seconds
+  useEffect(() => {
+    const id = setInterval(() => setNowMs(Date.now()), 60_000);
+    return () => clearInterval(id);
+  }, []);
+
+  const openCount = openIssues.length;
+  const urgentCount = openIssues.filter((i) => i.priority === "urgent").length;
+  const reminders = getUpcomingReminders(openIssues, nowMs);
+  const topReminder = reminders[0] ?? null;
+
+  // Maviş automatically wakes up if a deadline is overdue or <= 1 hour away!
+  const hasImmediateDeadline =
+    topReminder !== null &&
+    (topReminder.info.urgency === "overdue" || topReminder.info.urgency === "hour");
+
   const activeMood: CatMood =
     petted || celebrating
       ? "happy"
-      : bubbleOpen
-        ? urgentCount > 0
+      : bubbleOpen || hasImmediateDeadline
+        ? urgentCount > 0 || hasImmediateDeadline
           ? "urgent"
           : "idle"
         : "sleeping";
@@ -86,21 +101,49 @@ export function CatCompanion({
     askCat(input);
   }
 
-  const defaultGreeting = celebrating
-    ? "Nice job finishing that! Want to check what's next?"
-    : openCount === 0
-      ? "All clear! Time for a cozy nap—or want to add something?"
-      : urgentCount > 0
-        ? `You have ${openCount} open (${urgentCount} urgent!). What should we do?`
-        : `You have ${openCount} open ${openCount === 1 ? "item" : "items"}. What would you like to do?`;
+  let defaultGreeting: string;
+  if (celebrating) {
+    defaultGreeting = "Nice job finishing that! Maviş is proud of you~";
+  } else if (topReminder) {
+    const extra = reminders.length > 1 ? ` (+${reminders.length - 1} more this week)` : "";
+    defaultGreeting = `Meow! Reminder: "${topReminder.issue.title}" is ${topReminder.info.label}${extra}.`;
+  } else if (openCount === 0) {
+    defaultGreeting = "All clear! Maviş is ready for a nap—or want to add something?";
+  } else if (urgentCount > 0) {
+    defaultGreeting = `You have ${openCount} open (${urgentCount} urgent). What should we do?`;
+  } else {
+    defaultGreeting = `Hi! You have ${openCount} open ${openCount === 1 ? "item" : "items"}. What would you like to do?`;
+  }
 
-  const hintPill = celebrating
-    ? "Nice job!"
-    : !bubbleOpen && urgentCount > 0
-      ? `zzZ · ${urgentCount} urgent`
-      : !bubbleOpen
-        ? "zzZ"
-        : null;
+  const shortTitle = topReminder
+    ? topReminder.issue.title.length > 18
+      ? `${topReminder.issue.title.slice(0, 18)}…`
+      : topReminder.issue.title
+    : "";
+
+  let hintPill: string | null = null;
+  let hintPillClass =
+    "border-[#E5DDD2] bg-[#FFFDF9] text-[#6B615A] hover:border-[#D9A791]";
+
+  if (celebrating) {
+    hintPill = "Nice job!";
+    hintPillClass = "border-[#CDE0D5] bg-[#E8F1EC] text-[#3B664F]";
+  } else if (!bubbleOpen) {
+    if (hasImmediateDeadline && topReminder) {
+      hintPill = `Maviş: "${shortTitle}" ${topReminder.info.label}!`;
+      hintPillClass = "border-[#EFCFD6] bg-[#FAE7EB] text-[#9E4555]";
+    } else if (topReminder && topReminder.info.urgency === "soon") {
+      hintPill = `zzZ · "${shortTitle}" ${topReminder.info.label}`;
+      hintPillClass = "border-[#EFE0B4] bg-[#FCF3D9] text-[#8A671F]";
+    } else if (topReminder && topReminder.info.urgency === "week") {
+      hintPill = `zzZ · due ${topReminder.info.label}`;
+      hintPillClass = "border-[#C9DFEB] bg-[#E5F0F6] text-[#3E6B80]";
+    } else if (urgentCount > 0) {
+      hintPill = `zzZ · ${urgentCount} urgent`;
+    } else {
+      hintPill = "zzZ";
+    }
+  }
 
   const speechBubble = bubbleOpen && (
     <div
@@ -109,9 +152,14 @@ export function CatCompanion({
       } animate-cat-float rounded-2xl border border-[#E2D8CB] bg-[#FFFDF9] p-4 shadow-lg shadow-[#2B2623]/10`}
     >
       <div className="mb-2.5 flex items-start justify-between gap-2">
-        <p className="whitespace-pre-wrap text-xs leading-relaxed text-[#2B2623]">
-          {thinking ? "Checking your notebook..." : (reply ?? defaultGreeting)}
-        </p>
+        <div>
+          <span className="mb-0.5 block font-display text-xs font-semibold text-[#8C6D53]">
+            Maviş
+          </span>
+          <p className="whitespace-pre-wrap text-xs leading-relaxed text-[#2B2623]">
+            {thinking ? "Maviş is checking your notebook..." : (reply ?? defaultGreeting)}
+          </p>
+        </div>
         <button
           type="button"
           onClick={() => setBubbleOpen(false)}
@@ -121,7 +169,6 @@ export function CatCompanion({
         </button>
       </div>
 
-      {/* Quick Action Choices */}
       <div className="mb-3 flex flex-wrap gap-1.5">
         <button
           type="button"
@@ -137,10 +184,10 @@ export function CatCompanion({
         <button
           type="button"
           disabled={thinking}
-          onClick={() => askCat("What are my most urgent or high priority open items?")}
+          onClick={() => askCat("What deadlines or urgent items do I have coming up?")}
           className="rounded-xl border border-[#EFCFD6] bg-[#FAE7EB] px-2.5 py-1.5 text-[11px] font-medium text-[#963F50] transition hover:bg-[#F5D8DF] disabled:opacity-50"
         >
-          What&apos;s urgent?
+          Deadlines?
         </button>
 
         <button
@@ -149,7 +196,7 @@ export function CatCompanion({
           onClick={() => askCat("Give me a short friendly summary of my open tasks.")}
           className="rounded-xl border border-[#DCD4F0] bg-[#F2EFFA] px-2.5 py-1.5 text-[11px] font-medium text-[#554782] transition hover:bg-[#E7E0F7] disabled:opacity-50"
         >
-          Summarize list
+          Summarize
         </button>
 
         <button
@@ -157,7 +204,7 @@ export function CatCompanion({
           onClick={handlePet}
           className="rounded-xl border border-[#CDE0D5] bg-[#E8F1EC] px-2.5 py-1.5 text-[11px] font-medium text-[#3B664F] transition hover:bg-[#DAE9E0]"
         >
-          Give head pats
+          Pet Maviş
         </button>
 
         {onOpenFullChat && (
@@ -174,13 +221,12 @@ export function CatCompanion({
         )}
       </div>
 
-      {/* Direct Mini Prompt Inside Speech Bubble */}
       <form onSubmit={handleSubmit} className="flex items-center gap-1.5">
         <input
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask me or say 'add task...' "
+          placeholder="Tell Maviş: 'add OS hw due Friday'..."
           disabled={thinking}
           className="flex-1 rounded-xl border border-[#E5DDD2] bg-[#FAF7F2] px-2.5 py-1.5 text-xs text-[#2B2623] placeholder-[#A89E94] focus:border-[#D49A80] focus:bg-[#FFFDF9] focus:outline-none"
         />
@@ -193,7 +239,6 @@ export function CatCompanion({
         </button>
       </form>
 
-      {/* Speech Bubble Pointer Tail */}
       <div
         className={`absolute -bottom-2 h-4 w-4 rotate-45 border-b border-r border-[#E2D8CB] bg-[#FFFDF9] ${
           inline ? "left-1/2 -translate-x-1/2" : "right-16"
@@ -208,7 +253,9 @@ export function CatCompanion({
         {speechBubble}
         <div className="relative flex flex-col items-center">
           {hintPill && (
-            <span className="mb-1 rounded-full border border-[#E5DDD2] bg-[#FFFDF9] px-2.5 py-0.5 text-[11px] font-medium text-[#786F68] shadow-2xs">
+            <span
+              className={`mb-1 rounded-full border px-2.5 py-0.5 text-[11px] font-medium shadow-2xs ${hintPillClass}`}
+            >
               {hintPill}
             </span>
           )}
@@ -217,7 +264,7 @@ export function CatCompanion({
             size="lg"
             celebrating={celebrating}
             onClick={() => setBubbleOpen((prev) => !prev)}
-            title={bubbleOpen ? "Click to let him nap" : "Click to wake him up"}
+            title={bubbleOpen ? "Let Maviş nap" : "Click to wake Maviş"}
           />
         </div>
       </div>
@@ -233,7 +280,7 @@ export function CatCompanion({
           <button
             type="button"
             onClick={() => setBubbleOpen(true)}
-            className="mb-0.5 rounded-full border border-[#E5DDD2] bg-[#FFFDF9] px-2.5 py-0.5 text-[11px] font-medium text-[#6B615A] shadow-xs transition hover:border-[#D9A791] hover:text-[#2B2623]"
+            className={`mb-0.5 rounded-full border px-2.5 py-0.5 text-[11px] font-medium shadow-xs transition ${hintPillClass}`}
           >
             {hintPill}
           </button>
@@ -243,7 +290,7 @@ export function CatCompanion({
           size="xl"
           celebrating={celebrating}
           onClick={() => setBubbleOpen((prev) => !prev)}
-          title={bubbleOpen ? "Click to let him nap" : "Click to wake him up"}
+          title={bubbleOpen ? "Let Maviş nap" : "Click to wake Maviş"}
         />
       </div>
     </div>

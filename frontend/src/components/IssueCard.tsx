@@ -9,6 +9,11 @@ import {
   triageIssue,
   TriageResult,
 } from "@/lib/api";
+import {
+  fromDateTimeLocalValue,
+  getDeadlineInfo,
+  toDateTimeLocalValue,
+} from "@/lib/deadlines";
 import { PRIORITY_LABEL, PriorityIcon, STATUS_LABEL, StatusIcon } from "@/components/Icons";
 
 interface IssueCardProps {
@@ -70,6 +75,8 @@ export function IssueCard({ issue, onUpdate, onDelete }: IssueCardProps) {
     setTriageResult(null);
   }
 
+  const deadline = issue.status !== "done" ? getDeadlineInfo(issue.due_at) : null;
+
   return (
     <article className="group relative border-b border-[#ECE5DC] last:border-b-0 transition-colors hover:bg-[#FAF6F0]">
       <div className="flex items-center gap-3 px-4 py-3.5">
@@ -93,11 +100,10 @@ export function IssueCard({ issue, onUpdate, onDelete }: IssueCardProps) {
                     setOpenMenu(null);
                     onUpdate(issue.id, { priority: p });
                   }}
-                  className={`flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-xs transition ${
-                    issue.priority === p
+                  className={`flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-xs transition ${issue.priority === p
                       ? "bg-[#F3EDE5] font-medium text-[#2B2623]"
                       : "text-[#5E554E] hover:bg-[#FAF6F0]"
-                  }`}
+                    }`}
                 >
                   <PriorityIcon priority={p} className="h-3.5 w-3.5" />
                   <span>{PRIORITY_LABEL[p ?? ""]}</span>
@@ -131,11 +137,10 @@ export function IssueCard({ issue, onUpdate, onDelete }: IssueCardProps) {
                     setOpenMenu(null);
                     onUpdate(issue.id, { status: s });
                   }}
-                  className={`flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-xs transition ${
-                    issue.status === s
+                  className={`flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-xs transition ${issue.status === s
                       ? "bg-[#F3EDE5] font-medium text-[#2B2623]"
                       : "text-[#5E554E] hover:bg-[#FAF6F0]"
-                  }`}
+                    }`}
                 >
                   <StatusIcon status={s} className="h-3.5 w-3.5" />
                   <span>{STATUS_LABEL[s]}</span>
@@ -151,11 +156,10 @@ export function IssueCard({ issue, onUpdate, onDelete }: IssueCardProps) {
           className="min-w-0 flex-1 text-left"
         >
           <span
-            className={`block truncate text-[14px] font-medium ${
-              issue.status === "done"
+            className={`block truncate text-[14px] font-medium ${issue.status === "done"
                 ? "text-[#A3998F] line-through"
                 : "text-[#2B2623]"
-            }`}
+              }`}
           >
             {issue.title}
           </span>
@@ -171,6 +175,15 @@ export function IssueCard({ issue, onUpdate, onDelete }: IssueCardProps) {
             </span>
           ))}
         </div>
+
+        {deadline && (
+          <span
+            title={issue.due_at ? `Due: ${new Date(issue.due_at).toLocaleString()}` : undefined}
+            className={`shrink-0 rounded-full border px-2 py-0.5 font-mono text-[10px] font-medium ${deadline.badgeClass}`}
+          >
+            {deadline.label}
+          </span>
+        )}
 
         <button
           type="button"
@@ -208,7 +221,30 @@ export function IssueCard({ issue, onUpdate, onDelete }: IssueCardProps) {
 
       {expanded && (
         <div className="space-y-3 border-t border-[#F0EAE2] bg-[#F7F2EB]/60 px-14 py-3.5 text-sm text-[#5E554E]">
-          <p className="whitespace-pre-wrap leading-relaxed">{issue.description}</p>
+          <p className="whitespace-pre-wrap leading-relaxed">
+            {issue.description || "No notes yet."}
+          </p>
+
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            <span className="text-[#8C8177]">Due:</span>
+            <input
+              type="datetime-local"
+              value={toDateTimeLocalValue(issue.due_at)}
+              onChange={(e) =>
+                onUpdate(issue.id, { due_at: fromDateTimeLocalValue(e.target.value) })
+              }
+              className="rounded-lg border border-[#E5DDD2] bg-[#FFFDF9] px-2 py-1 text-xs text-[#2B2623] focus:border-[#D49A80] focus:outline-none"
+            />
+            {issue.due_at && (
+              <button
+                type="button"
+                onClick={() => onUpdate(issue.id, { due_at: null })}
+                className="text-[11px] text-[#8C8177] hover:text-[#2B2623]"
+              >
+                Clear
+              </button>
+            )}
+          </div>
 
           {issue.labels.length > 0 && (
             <div className="flex flex-wrap gap-1.5 sm:hidden">

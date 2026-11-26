@@ -16,6 +16,7 @@ class Issue(Base):
     labels: Mapped[list[str]] = mapped_column(ARRAY(String(30)), nullable=False, default=list)
     priority: Mapped[str | None] = mapped_column(String(20), default=None)
     status: Mapped[str] = mapped_column(String(20), nullable=False, index=True, default="open")
+    due_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, default=None)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )

@@ -18,6 +18,7 @@ export interface Issue {
   labels: string[];
   priority: IssuePriority | null;
   status: IssueStatus;
+  due_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -28,6 +29,7 @@ export interface IssueCreate {
   labels?: string[];
   priority?: IssuePriority | null;
   status?: IssueStatus;
+  due_at?: string | null;
 }
 
 export interface IssueUpdate {
@@ -36,6 +38,7 @@ export interface IssueUpdate {
   labels?: string[];
   priority?: IssuePriority | null;
   status?: IssueStatus;
+  due_at?: string | null;
 }
 
 export async function listIssues(filters?: {
